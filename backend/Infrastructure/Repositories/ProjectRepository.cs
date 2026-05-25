@@ -17,6 +17,9 @@ public class ProjectRepository : IProjectRepository
     public Task<Project?> GetByIdAsync(Guid id) =>
         _dbContext.Projects.FirstOrDefaultAsync(project => project.Id == id);
 
-    public Task<IReadOnlyList<Project>> GetAllAsync() =>
-        _dbContext.Projects.AsNoTracking().ToListAsync();
+    public async Task<IReadOnlyList<Project>> GetAllAsync()
+    {
+        var projects = await _dbContext.Projects.AsNoTracking().ToListAsync();
+        return projects;
+    }
 }

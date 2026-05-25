@@ -14,8 +14,13 @@ public class IssueRepository : IIssueRepository
         _dbContext = dbContext;
     }
 
-    public Task<IReadOnlyList<Issue>> GetByProjectAsync(Guid projectId) =>
-        _dbContext.Issues.AsNoTracking().Where(issue => issue.ProjectId == projectId).ToListAsync();
+    public async Task<IReadOnlyList<Issue>> GetByProjectAsync(Guid projectId)
+    {
+        var issues = await _dbContext.Issues.AsNoTracking()
+            .Where(issue => issue.ProjectId == projectId)
+            .ToListAsync();
+        return issues;
+    }
 
     public Task<Issue?> GetByIdAsync(Guid id) =>
         _dbContext.Issues.AsNoTracking().FirstOrDefaultAsync(issue => issue.Id == id);
