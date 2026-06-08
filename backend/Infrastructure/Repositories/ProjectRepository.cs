@@ -1,6 +1,6 @@
 using AgileFlow.Core.Entities;
 using AgileFlow.Core.Interfaces;
-using AgileFlow.Infrastructure.Persistence;
+using Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace AgileFlow.Infrastructure.Repositories;
@@ -14,7 +14,7 @@ public class ProjectRepository : IProjectRepository
         _dbContext = dbContext;
     }
 
-    public Task<Project?> GetByIdAsync(Guid id) =>
+    public Task<Project?> GetByIdAsync(int id) =>
         _dbContext.Projects.FirstOrDefaultAsync(project => project.Id == id);
 
     public async Task<IReadOnlyList<Project>> GetAllAsync()

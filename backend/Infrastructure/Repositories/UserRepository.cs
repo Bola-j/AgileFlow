@@ -1,6 +1,6 @@
 using AgileFlow.Core.Entities;
 using AgileFlow.Core.Interfaces;
-using AgileFlow.Infrastructure.Persistence;
+using Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace AgileFlow.Infrastructure.Repositories;
@@ -14,9 +14,9 @@ public class UserRepository : IUserRepository
         _dbContext = dbContext;
     }
 
-    public Task<User?> GetByIdAsync(Guid id) =>
+    public Task<AppUser?> GetByIdAsync(string id) =>
         _dbContext.Users.FirstOrDefaultAsync(user => user.Id == id);
 
-    public Task<User?> GetByEmailAsync(string email) =>
+    public Task<AppUser?> GetByEmailAsync(string email) =>
         _dbContext.Users.FirstOrDefaultAsync(user => user.Email == email);
 }

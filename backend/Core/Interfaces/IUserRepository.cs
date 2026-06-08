@@ -4,6 +4,6 @@ namespace AgileFlow.Core.Interfaces;
 
 public interface IUserRepository
 {
-    Task<User?> GetByIdAsync(Guid id);
-    Task<User?> GetByEmailAsync(string email);
+    Task<AppUser?> GetByIdAsync(string id);
+    Task<AppUser?> GetByEmailAsync(string email);
 }
