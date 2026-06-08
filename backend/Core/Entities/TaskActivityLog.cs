@@ -1,0 +1,32 @@
+﻿using AgileFlow.Core.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Core.Entities
+{
+    public class TaskActivityLog : BaseEntity
+    {
+        public string FieldChanged { get; private set; } = string.Empty;
+        public string NewValue { get; private set; } = string.Empty;
+        public string OldValue { get; private set; } = string.Empty;
+        public int ProjectTaskId { get; private set; }
+        public ProjectTask ProjectTask { get; private set; } = null!;
+        public string AppUserId { get; private set; } = string.Empty;
+        public AppUser AppUser { get; private set; } = null!;
+
+        private TaskActivityLog() { }
+
+        public TaskActivityLog(string fieldChanged, int projectTaskId, string appUserId,
+                               string newValue, string oldValue)
+        {
+            FieldChanged = fieldChanged;
+            ProjectTaskId = projectTaskId;
+            AppUserId = appUserId;
+            NewValue = newValue;
+            OldValue = oldValue;
+        }
+    }
+}
