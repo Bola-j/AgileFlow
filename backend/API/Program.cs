@@ -1,5 +1,5 @@
-using AgileFlow.Core.Entities;
-using Infrastructure.Persistence.Data;
+﻿using AgileFlow.Domain.Entities;
+using AgileFlow.Infrastructure.Persistence.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -59,3 +59,4 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+

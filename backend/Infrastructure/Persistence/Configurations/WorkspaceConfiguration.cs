@@ -1,4 +1,4 @@
-﻿using Core.Entities;
+﻿using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Infrastructure.Persistence.Configurations
+namespace AgileFlow.Infrastructure.Persistence.Configurations
 {
     public class WorkspaceConfiguration : IEntityTypeConfiguration<Workspace>
     {
@@ -44,3 +44,4 @@ namespace Infrastructure.Persistence.Configurations
         }
     }
 }
+

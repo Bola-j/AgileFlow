@@ -1,10 +1,10 @@
-using AgileFlow.Core.Entities;
-using Core.Entities;
+﻿using AgileFlow.Domain.Entities;
+using Domain.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
-namespace Infrastructure.Persistence.Data 
+namespace AgileFlow.Infrastructure.Persistence.Data 
 {
     public class AgileFlowDbContext : IdentityDbContext<AppUser>
     {

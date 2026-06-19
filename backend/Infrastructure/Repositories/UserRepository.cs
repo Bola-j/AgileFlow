@@ -1,7 +1,8 @@
-using AgileFlow.Core.Entities;
-using AgileFlow.Core.Interfaces;
-using Infrastructure.Persistence.Data;
+﻿using AgileFlow.Application.Interfaces;
+using AgileFlow;
+using AgileFlow.Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
+using AgileFlow.Domain.Entities;
 
 namespace AgileFlow.Infrastructure.Repositories;
 
@@ -20,3 +21,4 @@ public class UserRepository : IUserRepository
     public Task<AppUser?> GetByEmailAsync(string email) =>
         _dbContext.Users.FirstOrDefaultAsync(user => user.Email == email);
 }
+

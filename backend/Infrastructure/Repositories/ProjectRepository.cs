@@ -1,6 +1,6 @@
-using AgileFlow.Core.Entities;
-using AgileFlow.Core.Interfaces;
-using Infrastructure.Persistence.Data;
+﻿using AgileFlow.Domain.Entities;
+using AgileFlow.Application.Interfaces;
+using AgileFlow.Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace AgileFlow.Infrastructure.Repositories;
@@ -23,3 +23,4 @@ public class ProjectRepository : IProjectRepository
         return projects;
     }
 }
+
