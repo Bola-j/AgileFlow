@@ -21,3 +21,5 @@ backend/**/obj/
 
 .env
 .DS_Store
+/backend/API/appsettings.json
+/backend/API/appsettings.Development.json

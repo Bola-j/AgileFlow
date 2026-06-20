@@ -1,0 +1,79 @@
+using AgileFlow.Application.DTOs.Auth;
+using AgileFlow.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace AgileFlow.API.Controllers;
+
+[ApiController]
+[Route("api/auth")]
+[Produces("application/json")]
+public sealed class AuthController(IAuthService authService) : ControllerBase
+{
+    /// <summary>Register a new user. Returns access + refresh tokens on success.</summary>
+    [HttpPost("register")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
+    {
+        try
+        {
+            var response = await authService.RegisterAsync(request);
+            return CreatedAtAction(nameof(Register), response);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>Login with email + password. Returns access + refresh tokens.</summary>
+    [HttpPost("login")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
+    {
+        try
+        {
+            var response = await authService.LoginAsync(request);
+            return Ok(response);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Exchange an expired access token + valid refresh token for a fresh pair.
+    /// The old refresh token is revoked immediately (token rotation).
+    /// </summary>
+    [HttpPost("refresh")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Refresh([FromBody] RefreshRequestDto request)
+    {
+        try
+        {
+            var response = await authService.RefreshAsync(request);
+            return Ok(response);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>Revoke the given refresh token, effectively logging the user out.</summary>
+    [HttpPost("logout")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Logout([FromBody] LogoutRequestDto request)
+    {
+        await authService.LogoutAsync(request.RefreshToken);
+        return NoContent();
+    }
+}

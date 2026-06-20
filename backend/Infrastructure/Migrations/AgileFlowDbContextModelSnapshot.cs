@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace AgileFlow.Infrastructure.Migrations
+namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AgileFlowDbContext))]
     partial class AgileFlowDbContextModelSnapshot : ModelSnapshot
@@ -22,7 +22,7 @@ namespace AgileFlow.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("AgileFlow.Core.Entities.AppUser", b =>
+            modelBuilder.Entity("AgileFlow.Domain.Entities.AppUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -122,7 +122,7 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("AgileFlow.Core.Entities.Board", b =>
+            modelBuilder.Entity("AgileFlow.Domain.Entities.Board", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -159,109 +159,7 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.ToTable("Boards");
                 });
 
-            modelBuilder.Entity("AgileFlow.Core.Entities.Project", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("WorkspaceId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("WorkspaceId");
-
-                    b.ToTable("Projects");
-                });
-
-            modelBuilder.Entity("AgileFlow.Core.Entities.Sprint", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Goal")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProjectId");
-
-                    b.ToTable("Sprints");
-                });
-
-            modelBuilder.Entity("Core.Entities.BoardColumn", b =>
+            modelBuilder.Entity("AgileFlow.Domain.Entities.BoardColumn", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -298,7 +196,7 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.ToTable("BoardColumns");
                 });
 
-            modelBuilder.Entity("Core.Entities.Comment", b =>
+            modelBuilder.Entity("AgileFlow.Domain.Entities.Comment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -341,7 +239,7 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.ToTable("Comments");
                 });
 
-            modelBuilder.Entity("Core.Entities.Commit", b =>
+            modelBuilder.Entity("AgileFlow.Domain.Entities.Commit", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -402,7 +300,7 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.ToTable("Commits");
                 });
 
-            modelBuilder.Entity("Core.Entities.Notification", b =>
+            modelBuilder.Entity("AgileFlow.Domain.Entities.Notification", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -453,7 +351,58 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.ToTable("Notifications");
                 });
 
-            modelBuilder.Entity("Core.Entities.ProjectTask", b =>
+            modelBuilder.Entity("AgileFlow.Domain.Entities.Project", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("WorkspaceId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkspaceId");
+
+                    b.ToTable("Projects");
+                });
+
+            modelBuilder.Entity("AgileFlow.Domain.Entities.ProjectTask", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -512,7 +461,96 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.ToTable("ProjectTasks");
                 });
 
-            modelBuilder.Entity("Core.Entities.TaskActivityLog", b =>
+            modelBuilder.Entity("AgileFlow.Domain.Entities.RefreshToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRevoked")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshTokens");
+                });
+
+            modelBuilder.Entity("AgileFlow.Domain.Entities.Sprint", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Goal")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("Sprints");
+                });
+
+            modelBuilder.Entity("Domain.Entities.TaskActivityLog", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -563,7 +601,7 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.ToTable("TaskActivityLogs");
                 });
 
-            modelBuilder.Entity("Core.Entities.TaskDependent", b =>
+            modelBuilder.Entity("Domain.Entities.TaskDependent", b =>
                 {
                     b.Property<int>("TaskId")
                         .HasColumnType("int");
@@ -578,7 +616,7 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.ToTable("TaskDependents");
                 });
 
-            modelBuilder.Entity("Core.Entities.UserTask", b =>
+            modelBuilder.Entity("Domain.Entities.UserTask", b =>
                 {
                     b.Property<string>("AppUserId")
                         .HasColumnType("nvarchar(450)");
@@ -601,7 +639,7 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.ToTable("UserTasks");
                 });
 
-            modelBuilder.Entity("Core.Entities.UserWorkspace", b =>
+            modelBuilder.Entity("Domain.Entities.UserWorkspace", b =>
                 {
                     b.Property<string>("AppUserId")
                         .HasColumnType("nvarchar(450)");
@@ -620,6 +658,11 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.Property<DateTime>("JoinedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("Role")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.HasKey("AppUserId", "WorkspaceId");
 
                     b.HasIndex("WorkspaceId");
@@ -627,7 +670,7 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.ToTable("UserWorkspaces");
                 });
 
-            modelBuilder.Entity("Core.Entities.Workspace", b =>
+            modelBuilder.Entity("Domain.Entities.Workspace", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -797,9 +840,9 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("AgileFlow.Core.Entities.Board", b =>
+            modelBuilder.Entity("AgileFlow.Domain.Entities.Board", b =>
                 {
-                    b.HasOne("AgileFlow.Core.Entities.Project", "Project")
+                    b.HasOne("AgileFlow.Domain.Entities.Project", "Project")
                         .WithMany("Boards")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -808,31 +851,9 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("AgileFlow.Core.Entities.Project", b =>
+            modelBuilder.Entity("AgileFlow.Domain.Entities.BoardColumn", b =>
                 {
-                    b.HasOne("Core.Entities.Workspace", "Workspace")
-                        .WithMany("Projects")
-                        .HasForeignKey("WorkspaceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Workspace");
-                });
-
-            modelBuilder.Entity("AgileFlow.Core.Entities.Sprint", b =>
-                {
-                    b.HasOne("AgileFlow.Core.Entities.Project", "Project")
-                        .WithMany("Sprints")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Project");
-                });
-
-            modelBuilder.Entity("Core.Entities.BoardColumn", b =>
-                {
-                    b.HasOne("AgileFlow.Core.Entities.Board", "Board")
+                    b.HasOne("AgileFlow.Domain.Entities.Board", "Board")
                         .WithMany("BoardColumns")
                         .HasForeignKey("BoardId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -841,15 +862,15 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.Navigation("Board");
                 });
 
-            modelBuilder.Entity("Core.Entities.Comment", b =>
+            modelBuilder.Entity("AgileFlow.Domain.Entities.Comment", b =>
                 {
-                    b.HasOne("AgileFlow.Core.Entities.AppUser", "AppUser")
+                    b.HasOne("AgileFlow.Domain.Entities.AppUser", "AppUser")
                         .WithMany("Comments")
                         .HasForeignKey("AppUserId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("Core.Entities.ProjectTask", "ProjectTask")
+                    b.HasOne("AgileFlow.Domain.Entities.ProjectTask", "ProjectTask")
                         .WithMany("Comments")
                         .HasForeignKey("ProjectTaskId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -860,15 +881,15 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.Navigation("ProjectTask");
                 });
 
-            modelBuilder.Entity("Core.Entities.Commit", b =>
+            modelBuilder.Entity("AgileFlow.Domain.Entities.Commit", b =>
                 {
-                    b.HasOne("AgileFlow.Core.Entities.AppUser", "AppUser")
+                    b.HasOne("AgileFlow.Domain.Entities.AppUser", "AppUser")
                         .WithMany("Commits")
                         .HasForeignKey("AppUserId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("Core.Entities.ProjectTask", "ProjectTask")
+                    b.HasOne("AgileFlow.Domain.Entities.ProjectTask", "ProjectTask")
                         .WithMany("Commits")
                         .HasForeignKey("ProjectTaskId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -879,9 +900,9 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.Navigation("ProjectTask");
                 });
 
-            modelBuilder.Entity("Core.Entities.Notification", b =>
+            modelBuilder.Entity("AgileFlow.Domain.Entities.Notification", b =>
                 {
-                    b.HasOne("AgileFlow.Core.Entities.AppUser", "AppUser")
+                    b.HasOne("AgileFlow.Domain.Entities.AppUser", "AppUser")
                         .WithMany("Notifications")
                         .HasForeignKey("AppUserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -890,15 +911,26 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.Navigation("AppUser");
                 });
 
-            modelBuilder.Entity("Core.Entities.ProjectTask", b =>
+            modelBuilder.Entity("AgileFlow.Domain.Entities.Project", b =>
                 {
-                    b.HasOne("Core.Entities.BoardColumn", "Column")
+                    b.HasOne("Domain.Entities.Workspace", "Workspace")
+                        .WithMany("Projects")
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Workspace");
+                });
+
+            modelBuilder.Entity("AgileFlow.Domain.Entities.ProjectTask", b =>
+                {
+                    b.HasOne("AgileFlow.Domain.Entities.BoardColumn", "Column")
                         .WithMany("Tasks")
                         .HasForeignKey("ColumnId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("AgileFlow.Core.Entities.Sprint", "Sprint")
+                    b.HasOne("AgileFlow.Domain.Entities.Sprint", "Sprint")
                         .WithMany("Tasks")
                         .HasForeignKey("SprintId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -909,15 +941,37 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.Navigation("Sprint");
                 });
 
-            modelBuilder.Entity("Core.Entities.TaskActivityLog", b =>
+            modelBuilder.Entity("AgileFlow.Domain.Entities.RefreshToken", b =>
                 {
-                    b.HasOne("AgileFlow.Core.Entities.AppUser", "AppUser")
+                    b.HasOne("AgileFlow.Domain.Entities.AppUser", "AppUser")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AppUser");
+                });
+
+            modelBuilder.Entity("AgileFlow.Domain.Entities.Sprint", b =>
+                {
+                    b.HasOne("AgileFlow.Domain.Entities.Project", "Project")
+                        .WithMany("Sprints")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("Domain.Entities.TaskActivityLog", b =>
+                {
+                    b.HasOne("AgileFlow.Domain.Entities.AppUser", "AppUser")
                         .WithMany("TaskActivityLogs")
                         .HasForeignKey("AppUserId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("Core.Entities.ProjectTask", "ProjectTask")
+                    b.HasOne("AgileFlow.Domain.Entities.ProjectTask", "ProjectTask")
                         .WithMany("TaskActivityLogs")
                         .HasForeignKey("ProjectTaskId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -928,15 +982,15 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.Navigation("ProjectTask");
                 });
 
-            modelBuilder.Entity("Core.Entities.TaskDependent", b =>
+            modelBuilder.Entity("Domain.Entities.TaskDependent", b =>
                 {
-                    b.HasOne("Core.Entities.ProjectTask", "DependedTask")
+                    b.HasOne("AgileFlow.Domain.Entities.ProjectTask", "DependedTask")
                         .WithMany()
                         .HasForeignKey("DependedTaskId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("Core.Entities.ProjectTask", "Task")
+                    b.HasOne("AgileFlow.Domain.Entities.ProjectTask", "Task")
                         .WithMany("TaskDependents")
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -947,15 +1001,15 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.Navigation("Task");
                 });
 
-            modelBuilder.Entity("Core.Entities.UserTask", b =>
+            modelBuilder.Entity("Domain.Entities.UserTask", b =>
                 {
-                    b.HasOne("AgileFlow.Core.Entities.AppUser", "AppUser")
+                    b.HasOne("AgileFlow.Domain.Entities.AppUser", "AppUser")
                         .WithMany("UserTasks")
                         .HasForeignKey("AppUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Core.Entities.ProjectTask", "ProjectTask")
+                    b.HasOne("AgileFlow.Domain.Entities.ProjectTask", "ProjectTask")
                         .WithMany("UserTasks")
                         .HasForeignKey("ProjectTaskId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -966,15 +1020,15 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.Navigation("ProjectTask");
                 });
 
-            modelBuilder.Entity("Core.Entities.UserWorkspace", b =>
+            modelBuilder.Entity("Domain.Entities.UserWorkspace", b =>
                 {
-                    b.HasOne("AgileFlow.Core.Entities.AppUser", "AppUser")
+                    b.HasOne("AgileFlow.Domain.Entities.AppUser", "AppUser")
                         .WithMany("UserWorkspaces")
                         .HasForeignKey("AppUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Core.Entities.Workspace", "Workspace")
+                    b.HasOne("Domain.Entities.Workspace", "Workspace")
                         .WithMany("UserWorkspaces")
                         .HasForeignKey("WorkspaceId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -996,7 +1050,7 @@ namespace AgileFlow.Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("AgileFlow.Core.Entities.AppUser", null)
+                    b.HasOne("AgileFlow.Domain.Entities.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1005,7 +1059,7 @@ namespace AgileFlow.Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("AgileFlow.Core.Entities.AppUser", null)
+                    b.HasOne("AgileFlow.Domain.Entities.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1020,7 +1074,7 @@ namespace AgileFlow.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AgileFlow.Core.Entities.AppUser", null)
+                    b.HasOne("AgileFlow.Domain.Entities.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1029,14 +1083,14 @@ namespace AgileFlow.Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("AgileFlow.Core.Entities.AppUser", null)
+                    b.HasOne("AgileFlow.Domain.Entities.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("AgileFlow.Core.Entities.AppUser", b =>
+            modelBuilder.Entity("AgileFlow.Domain.Entities.AppUser", b =>
                 {
                     b.Navigation("Comments");
 
@@ -1051,29 +1105,24 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.Navigation("UserWorkspaces");
                 });
 
-            modelBuilder.Entity("AgileFlow.Core.Entities.Board", b =>
+            modelBuilder.Entity("AgileFlow.Domain.Entities.Board", b =>
                 {
                     b.Navigation("BoardColumns");
                 });
 
-            modelBuilder.Entity("AgileFlow.Core.Entities.Project", b =>
+            modelBuilder.Entity("AgileFlow.Domain.Entities.BoardColumn", b =>
+                {
+                    b.Navigation("Tasks");
+                });
+
+            modelBuilder.Entity("AgileFlow.Domain.Entities.Project", b =>
                 {
                     b.Navigation("Boards");
 
                     b.Navigation("Sprints");
                 });
 
-            modelBuilder.Entity("AgileFlow.Core.Entities.Sprint", b =>
-                {
-                    b.Navigation("Tasks");
-                });
-
-            modelBuilder.Entity("Core.Entities.BoardColumn", b =>
-                {
-                    b.Navigation("Tasks");
-                });
-
-            modelBuilder.Entity("Core.Entities.ProjectTask", b =>
+            modelBuilder.Entity("AgileFlow.Domain.Entities.ProjectTask", b =>
                 {
                     b.Navigation("Comments");
 
@@ -1086,7 +1135,12 @@ namespace AgileFlow.Infrastructure.Migrations
                     b.Navigation("UserTasks");
                 });
 
-            modelBuilder.Entity("Core.Entities.Workspace", b =>
+            modelBuilder.Entity("AgileFlow.Domain.Entities.Sprint", b =>
+                {
+                    b.Navigation("Tasks");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Workspace", b =>
                 {
                     b.Navigation("Projects");
 
@@ -1096,4 +1150,3 @@ namespace AgileFlow.Infrastructure.Migrations
         }
     }
 }
-

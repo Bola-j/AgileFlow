@@ -26,6 +26,10 @@ namespace AgileFlow.Infrastructure.Persistence.Data
         public DbSet<TaskActivityLog> TaskActivityLogs { get; set; }
         public DbSet<Notification> Notifications { get; set; }
 
+
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
