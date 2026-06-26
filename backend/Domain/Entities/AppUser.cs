@@ -37,9 +37,21 @@ namespace AgileFlow.Domain.Entities
             Update();
         }
 
+        public void ClearProfilePicture()
+        {
+            Profile_Picture = null;
+            Update();
+        }
+
         public void SetDOB(DateOnly dob)
         {
             DOB = dob;
+            Update();
+        }
+
+        public void ClearDOB()
+        {
+            DOB = null;
             Update();
         }
 

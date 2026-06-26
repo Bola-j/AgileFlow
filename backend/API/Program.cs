@@ -5,6 +5,7 @@ using AgileFlow.Infrastructure.Repositories;
 using AgileFlow.Infrastructure.Services;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
+using Application;
 using Application.Mappings;
 using Infrastructure.Repositories;
 using Infrastructure.Services;
@@ -99,10 +100,14 @@ internal class Program
             options.AddPolicy("TeamLeadPlus", p => p.RequireRole("Admin", "TeamLead"));
         });
         // ── AutoMapper ──────────────────────────────────────────────────────
-        builder.Services.AddAutoMapper(typeof(WorkspaceProfile).Assembly);
+        builder.Services.AddAutoMapper(
+            cfg => { },
+            typeof(WorkspaceProfile)
+        );
 
         // ──  Repositories ──────────────────────────────────────────────────────
         builder.Services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
+        builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
         builder.Services.AddScoped<ISprintRepository, SprintRepository>();
         builder.Services.AddScoped<ITaskRepository, TaskRepository>();
@@ -110,6 +115,7 @@ internal class Program
         // ── Application services ──────────────────────────────────────────────────────
         builder.Services.AddScoped<ITokenService, TokenService>();
         builder.Services.AddScoped<IAuthService, AuthService>();
+        builder.Services.AddScoped<IAccountService, AccountService>();
         builder.Services.AddScoped<IWorkspaceAuthorizationService, WorkspaceAuthorizationService>();
         builder.Services.AddScoped<IWorkspaceService, WorkspaceService>();
         builder.Services.AddScoped<IProjectService, ProjectService>();
