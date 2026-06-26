@@ -18,15 +18,18 @@ namespace Infrastructure.Services
     {
         private readonly IProjectRepository _projectRepository;
         private readonly IWorkspaceRepository _workspaceRepository;
+        private readonly IWorkspaceAuthorizationService _authorizationService;
         private readonly IMapper _mapper;
 
         public ProjectService(
             IProjectRepository projectRepository,
             IWorkspaceRepository workspaceRepository,
+            IWorkspaceAuthorizationService authorizationService,
             IMapper mapper)
         {
             _projectRepository = projectRepository;
             _workspaceRepository = workspaceRepository;
+            _authorizationService = authorizationService;
             _mapper = mapper;
         }
 
@@ -37,11 +40,7 @@ namespace Infrastructure.Services
             if (workspace is null)
                 throw new KeyNotFoundException($"Workspace with id {workspaceId} not found.");
 
-            bool isMember = workspace.UserWorkspaces
-                .Any(uw => uw.AppUserId == userId && !uw.IsDeleted);
-
-            if (!isMember)
-                throw new UnauthorizedAccessException("You are not a member of this workspace.");
+            await _authorizationService.EnsureMemberAsync(workspaceId, userId);
 
             var projects = await _projectRepository.GetAllByWorkspaceIdAsync(workspaceId);
             return _mapper.Map<IEnumerable<ProjectResponse>>(projects);
@@ -52,12 +51,7 @@ namespace Infrastructure.Services
             var project = await _projectRepository.GetByIdAsync(id);
             if (project is null) return null;
 
-            var workspace = await _workspaceRepository.GetByIdWithDetailsAsync(project.WorkspaceId);
-            bool isMember = workspace!.UserWorkspaces
-                .Any(uw => uw.AppUserId == userId && !uw.IsDeleted);
-
-            if (!isMember)
-                throw new UnauthorizedAccessException("You are not a member of this workspace.");
+            await _authorizationService.EnsureMemberAsync(project.WorkspaceId, userId);
 
             return _mapper.Map<ProjectResponse>(project);
         }
@@ -69,7 +63,7 @@ namespace Infrastructure.Services
             if (workspace is null)
                 throw new KeyNotFoundException($"Workspace with id {request.WorkspaceId} not found.");
 
-            EnsureAdmin(workspace.UserWorkspaces, userId);
+            await _authorizationService.EnsureRoleAsync(request.WorkspaceId, userId, UserRole.Admin, UserRole.TeamLead);
 
             if (request.EndDate <= request.StartDate)
                 throw new InvalidOperationException("EndDate must be after StartDate.");
@@ -94,8 +88,7 @@ namespace Infrastructure.Services
             var project = await _projectRepository.GetByIdAsync(id);
             if (project is null) return null;
 
-            var workspace = await _workspaceRepository.GetByIdWithDetailsAsync(project.WorkspaceId);
-            EnsureAdmin(workspace!.UserWorkspaces, userId);
+            await _authorizationService.EnsureRoleAsync(project.WorkspaceId, userId, UserRole.Admin, UserRole.TeamLead);
 
             if (request.EndDate <= project.StartDate)
                 throw new InvalidOperationException("EndDate must be after the project's StartDate.");
@@ -117,24 +110,10 @@ namespace Infrastructure.Services
             var project = await _projectRepository.GetByIdAsync(id);
             if (project is null) return false;
 
-            var workspace = await _workspaceRepository.GetByIdWithDetailsAsync(project.WorkspaceId);
-            EnsureAdmin(workspace!.UserWorkspaces, userId);
+            await _authorizationService.EnsureRoleAsync(project.WorkspaceId, userId, UserRole.Admin, UserRole.TeamLead);
 
             await _projectRepository.DeleteAsync(project);
             return true;
-        }
-
-
-        private static void EnsureAdmin(IEnumerable<UserWorkspace> memberships, string userId)
-        {
-            var membership = memberships
-                .FirstOrDefault(uw => uw.AppUserId == userId && !uw.IsDeleted);
-
-            if (membership is null)
-                throw new UnauthorizedAccessException("You are not a member of this workspace.");
-
-            if (membership.Role != UserRole.Admin)
-                throw new UnauthorizedAccessException("Only Admins can perform this action.");
         }
     }
 }

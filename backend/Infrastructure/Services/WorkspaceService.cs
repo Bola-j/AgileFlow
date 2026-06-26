@@ -10,11 +10,16 @@ namespace Infrastructure.Services
     public class WorkspaceService : IWorkspaceService
     {
         private readonly IWorkspaceRepository _workspaceRepository;
+        private readonly IWorkspaceAuthorizationService _authorizationService;
         private readonly IMapper _mapper;
 
-        public WorkspaceService(IWorkspaceRepository workspaceRepository, IMapper mapper)
+        public WorkspaceService(
+            IWorkspaceRepository workspaceRepository,
+            IWorkspaceAuthorizationService authorizationService,
+            IMapper mapper)
         {
             _workspaceRepository = workspaceRepository;
+            _authorizationService = authorizationService;
             _mapper = mapper;
         }
 
@@ -29,11 +34,7 @@ namespace Infrastructure.Services
             var workspace = await _workspaceRepository.GetByIdWithDetailsAsync(id);
             if (workspace is null) return null;
 
-            bool isMember = workspace.UserWorkspaces
-                .Any(uw => uw.AppUserId == userId && !uw.IsDeleted);
-
-            if (!isMember)
-                throw new UnauthorizedAccessException("You are not a member of this workspace.");
+            await _authorizationService.EnsureMemberAsync(id, userId);
 
             return _mapper.Map<WorkspaceResponse>(workspace);
         }
@@ -62,14 +63,7 @@ namespace Infrastructure.Services
             var workspace = await _workspaceRepository.GetByIdWithDetailsAsync(id);
             if (workspace is null) return null;
 
-            var membership = workspace.UserWorkspaces
-                .FirstOrDefault(uw => uw.AppUserId == userId && !uw.IsDeleted);
-
-            if (membership is null)
-                throw new UnauthorizedAccessException("You are not a member of this workspace.");
-
-            if (membership.Role != UserRole.Admin)
-                throw new UnauthorizedAccessException("Only Admins can update the workspace.");
+            await _authorizationService.EnsureRoleAsync(id, userId, UserRole.Admin);
 
             if (await _workspaceRepository.NameExistsAsync(request.Name, userId, excludeId: id))
                 throw new InvalidOperationException($"You already have a workspace named '{request.Name}'.");
@@ -89,14 +83,7 @@ namespace Infrastructure.Services
             var workspace = await _workspaceRepository.GetByIdWithDetailsAsync(id);
             if (workspace is null) return false;
 
-            var membership = workspace.UserWorkspaces
-                .FirstOrDefault(uw => uw.AppUserId == userId && !uw.IsDeleted);
-
-            if (membership is null)
-                throw new UnauthorizedAccessException("You are not a member of this workspace.");
-
-            if (membership.Role != UserRole.Admin)
-                throw new UnauthorizedAccessException("Only Admins can delete the workspace.");
+            await _authorizationService.EnsureRoleAsync(id, userId, UserRole.Admin);
 
             await _workspaceRepository.DeleteAsync(workspace);
             return true;

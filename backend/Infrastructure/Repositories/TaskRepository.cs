@@ -1,0 +1,95 @@
+using AgileFlow.Domain.Entities;
+using AgileFlow.Infrastructure.Persistence.Data;
+using Application.Interfaces;
+using Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace Infrastructure.Repositories;
+
+public class TaskRepository : ITaskRepository
+{
+    private readonly AgileFlowDbContext _context;
+
+    public TaskRepository(AgileFlowDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<IEnumerable<ProjectTask>> GetBySprintIdAsync(int sprintId)
+    {
+        return await TasksWithDetails()
+            .Where(t => t.SprintId == sprintId)
+            .ToListAsync();
+    }
+
+    public async Task<ProjectTask?> GetByIdAsync(int id)
+    {
+        return await TasksWithDetails()
+            .FirstOrDefaultAsync(t => t.Id == id);
+    }
+
+    public async Task<Sprint?> GetSprintByIdAsync(int sprintId)
+    {
+        return await _context.Sprints
+            .Include(s => s.Project)
+            .FirstOrDefaultAsync(s => s.Id == sprintId);
+    }
+
+    public async Task<BoardColumn?> GetColumnByIdAsync(int columnId)
+    {
+        return await _context.BoardColumns
+            .Include(c => c.Board)
+            .FirstOrDefaultAsync(c => c.Id == columnId);
+    }
+
+    public async Task<ProjectTask> AddAsync(ProjectTask task)
+    {
+        await _context.ProjectTasks.AddAsync(task);
+        await _context.SaveChangesAsync();
+        return task;
+    }
+
+    public async Task UpdateAsync(ProjectTask task)
+    {
+        _context.ProjectTasks.Update(task);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(ProjectTask task)
+    {
+        task.Delete();
+        _context.ProjectTasks.Update(task);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<UserTask?> GetAssignmentAsync(int taskId, string userId, bool includeDeleted = false)
+    {
+        var query = includeDeleted ? _context.UserTasks.IgnoreQueryFilters() : _context.UserTasks;
+
+        return await query.FirstOrDefaultAsync(ut => ut.ProjectTaskId == taskId &&
+                                                     ut.AppUserId == userId);
+    }
+
+    public async Task AddAssignmentAsync(UserTask assignment)
+    {
+        await _context.UserTasks.AddAsync(assignment);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task UpdateAssignmentAsync(UserTask assignment)
+    {
+        _context.UserTasks.Update(assignment);
+        await _context.SaveChangesAsync();
+    }
+
+    private IQueryable<ProjectTask> TasksWithDetails()
+    {
+        return _context.ProjectTasks
+            .Include(t => t.UserTasks.Where(ut => !ut.IsDeleted))
+                .ThenInclude(ut => ut.AppUser)
+            .Include(t => t.Sprint)
+                .ThenInclude(s => s!.Project)
+            .Include(t => t.Column)
+                .ThenInclude(c => c.Board);
+    }
+}

@@ -104,12 +104,15 @@ internal class Program
         // ──  Repositories ──────────────────────────────────────────────────────
         builder.Services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
         builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+        builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 
         // ── Application services ──────────────────────────────────────────────────────
         builder.Services.AddScoped<ITokenService, TokenService>();
         builder.Services.AddScoped<IAuthService, AuthService>();
+        builder.Services.AddScoped<IWorkspaceAuthorizationService, WorkspaceAuthorizationService>();
         builder.Services.AddScoped<IWorkspaceService, WorkspaceService>();
         builder.Services.AddScoped<IProjectService, ProjectService>();
+        builder.Services.AddScoped<ITaskService, TaskService>();
 
         // ── CORS (Vite dev server) ────────────────────────────────────────────────────
         builder.Services.AddCors(options =>

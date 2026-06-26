@@ -29,5 +29,11 @@ namespace Domain.Entities
             IsDeleted = true;
             DeletedAt = DateTime.UtcNow;
         }
+
+        public void Restore()
+        {
+            IsDeleted = false;
+            DeletedAt = null;
+        }
     }
 }
