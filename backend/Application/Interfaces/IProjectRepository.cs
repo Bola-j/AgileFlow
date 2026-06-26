@@ -4,7 +4,12 @@ namespace AgileFlow.Application.Interfaces;
 
 public interface IProjectRepository
 {
+    Task<IEnumerable<Project>> GetAllByWorkspaceIdAsync(int workspaceId);
     Task<Project?> GetByIdAsync(int id);
-    Task<IReadOnlyList<Project>> GetAllAsync();
+    Task<bool> NameExistsInWorkspaceAsync(string name, int workspaceId, int? excludeId = null);
+    Task<bool> ExistsAsync(int id);
+    Task<Project> AddAsync(Project project);
+    Task UpdateAsync(Project project);
+    Task DeleteAsync(Project project);
 }
 

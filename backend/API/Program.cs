@@ -1,7 +1,13 @@
 ﻿using AgileFlow.Application.Interfaces;
 using AgileFlow.Domain.Entities;
 using AgileFlow.Infrastructure.Persistence.Data;
+using AgileFlow.Infrastructure.Repositories;
 using AgileFlow.Infrastructure.Services;
+using Application.Interfaces;
+using Application.Interfaces.Repositories;
+using Application.Mappings;
+using Infrastructure.Repositories;
+using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -92,10 +98,18 @@ internal class Program
             options.AddPolicy("AdminOnly", p => p.RequireRole("Admin"));
             options.AddPolicy("TeamLeadPlus", p => p.RequireRole("Admin", "TeamLead"));
         });
+        // ── AutoMapper ──────────────────────────────────────────────────────
+        builder.Services.AddAutoMapper(typeof(WorkspaceProfile).Assembly);
+
+        // ──  Repositories ──────────────────────────────────────────────────────
+        builder.Services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
+        builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 
         // ── Application services ──────────────────────────────────────────────────────
         builder.Services.AddScoped<ITokenService, TokenService>();
         builder.Services.AddScoped<IAuthService, AuthService>();
+        builder.Services.AddScoped<IWorkspaceService, WorkspaceService>();
+        builder.Services.AddScoped<IProjectService, ProjectService>();
 
         // ── CORS (Vite dev server) ────────────────────────────────────────────────────
         builder.Services.AddCors(options =>

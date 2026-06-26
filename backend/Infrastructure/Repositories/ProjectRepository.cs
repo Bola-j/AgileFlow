@@ -7,20 +7,59 @@ namespace AgileFlow.Infrastructure.Repositories;
 
 public class ProjectRepository : IProjectRepository
 {
-    private readonly AgileFlowDbContext _dbContext;
+    private readonly AgileFlowDbContext _context;
 
-    public ProjectRepository(AgileFlowDbContext dbContext)
+    public ProjectRepository(AgileFlowDbContext context)
     {
-        _dbContext = dbContext;
+        _context = context;
     }
 
-    public Task<Project?> GetByIdAsync(int id) =>
-        _dbContext.Projects.FirstOrDefaultAsync(project => project.Id == id);
-
-    public async Task<IReadOnlyList<Project>> GetAllAsync()
+    public async Task<IEnumerable<Project>> GetAllByWorkspaceIdAsync(int workspaceId)
     {
-        var projects = await _dbContext.Projects.AsNoTracking().ToListAsync();
-        return projects;
+        return await _context.Projects
+            .Where(p => p.WorkspaceId == workspaceId && !p.IsDeleted)
+            .ToListAsync();
+    }
+
+    public async Task<Project?> GetByIdAsync(int id)
+    {
+        return await _context.Projects
+            .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
+    }
+
+    public async Task<bool> NameExistsInWorkspaceAsync(string name, int workspaceId, int? excludeId = null)
+    {
+        return await _context.Projects.AnyAsync(p =>
+            p.Name == name &&
+            p.WorkspaceId == workspaceId &&
+            !p.IsDeleted &&
+            (excludeId == null || p.Id != excludeId));
+    }
+
+    public async Task<bool> ExistsAsync(int id)
+    {
+        return await _context.Projects.AnyAsync(p => p.Id == id && !p.IsDeleted);
+    }
+
+    public async Task<Project> AddAsync(Project project)
+    {
+        await _context.Projects.AddAsync(project);
+        await _context.SaveChangesAsync();
+        return project;
+    }
+
+    public async Task UpdateAsync(Project project)
+    {
+        _context.Projects.Update(project);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(Project project)
+    {
+        project.Delete();
+        _context.Projects.Update(project);
+        await _context.SaveChangesAsync();
     }
 }
+
 
