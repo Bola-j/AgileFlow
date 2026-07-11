@@ -20,7 +20,9 @@ namespace Application.Mappings
             CreateMap<ProjectTask, TaskDetailResponse>()
                 .IncludeBase<ProjectTask, TaskSummaryResponse>()
                 .ForMember(dest => dest.Description,
-                    opt => opt.MapFrom(src => src.Description));
+                    opt => opt.MapFrom(src => src.Description))
+                .ForMember(dest => dest.Dependencies,
+                        opt => opt.MapFrom(src => src.TaskDependents));
 
             CreateMap<UserTask, TaskAssigneeResponse>()
                 .ForMember(dest => dest.UserId,
@@ -32,6 +34,19 @@ namespace Application.Mappings
                         string.IsNullOrWhiteSpace((src.AppUser.First_Name + " " + src.AppUser.Last_Name).Trim())
                             ? src.AppUser.UserName ?? src.AppUser.Email ?? src.AppUserId
                             : (src.AppUser.First_Name + " " + src.AppUser.Last_Name).Trim()));
+
+            CreateMap<TaskActivityLog, TaskActivityLogResponse>()
+                .ForMember(dest => dest.AppUserName, opt => opt.MapFrom(src =>
+                    src.AppUser == null
+                        ? "Unknown User"
+                        : string.IsNullOrWhiteSpace((src.AppUser.First_Name + " " + src.AppUser.Last_Name).Trim())
+                            ? src.AppUser.UserName ?? src.AppUser.Email ?? src.AppUserId
+                            : (src.AppUser.First_Name + " " + src.AppUser.Last_Name).Trim()));
+
+            CreateMap<TaskDependent, TaskDependencyResponse>()
+                .ForMember(dest => dest.DependencyTaskId, opt => opt.MapFrom(src => src.DependedTaskId))
+                .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.DependedTask.Title))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.DependedTask.Status.ToString()));
         }
     }
 }

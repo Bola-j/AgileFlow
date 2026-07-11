@@ -202,4 +202,58 @@ public class TaskController : ControllerBase
             return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
         }
     }
+
+    [HttpPost("tasks/{id:int}/dependencies/{dependencyTaskId:int}")]
+    public async Task<IActionResult> AddDependency(int id, int dependencyTaskId)
+    {
+        try
+        {
+            await _taskService.AddDependencyAsync(id, dependencyTaskId, UserId);
+            return Ok(new { message = "Dependency added successfully." });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("tasks/{id:int}/dependencies/{dependencyTaskId:int}")]
+    public async Task<IActionResult> RemoveDependency(int id, int dependencyTaskId)
+    {
+        try
+        {
+            await _taskService.RemoveDependencyAsync(id, dependencyTaskId, UserId);
+            return Ok(new { message = "Dependency removed successfully." });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("tasks/{id:int}/activity-logs")]
+    public async Task<ActionResult<IEnumerable<TaskActivityLogResponse>>> GetActivityLogs(int id)
+    {
+        try
+        {
+            var logs = await _taskService.GetActivityLogsAsync(id, UserId);
+            return Ok(logs);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
+    }
 }

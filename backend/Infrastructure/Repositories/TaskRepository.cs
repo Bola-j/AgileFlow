@@ -92,4 +92,45 @@ public class TaskRepository : ITaskRepository
             .Include(t => t.Column)
                 .ThenInclude(c => c.Board);
     }
+
+    public async Task<TaskDependent?> GetDependencyAsync(int taskId, int dependedTaskId)
+    {
+        return await _context.TaskDependents
+            .FirstOrDefaultAsync(td => td.TaskId == taskId && td.DependedTaskId == dependedTaskId);
+    }
+
+    public async Task AddDependencyAsync(TaskDependent dependency)
+    {
+        await _context.TaskDependents.AddAsync(dependency);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task RemoveDependencyAsync(TaskDependent dependency)
+    {
+        _context.TaskDependents.Remove(dependency);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<List<int>> GetDependedTaskIdsAsync(int taskId)
+    {
+        return await _context.TaskDependents
+            .Where(td => td.TaskId == taskId)
+            .Select(td => td.DependedTaskId)
+            .ToListAsync();
+    }
+
+    public async Task AddActivityLogAsync(TaskActivityLog log)
+    {
+        await _context.TaskActivityLogs.AddAsync(log);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<TaskActivityLog>> GetActivityLogsByTaskIdAsync(int taskId)
+    {
+        return await _context.TaskActivityLogs
+            .Include(l => l.AppUser)
+            .Where(l => l.ProjectTaskId == taskId)
+            .OrderByDescending(l => l.Id)
+            .ToListAsync();
+    }
 }

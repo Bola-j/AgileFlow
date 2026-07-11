@@ -13,4 +13,7 @@ public interface ITaskService
     Task<TaskDetailResponse?> AssignUserAsync(int id, AssignTaskRequest request, string userId);
     Task<TaskDetailResponse?> UnassignUserAsync(int id, string assigneeUserId, string userId);
     Task<bool> DeleteAsync(int id, string userId);
+    Task<bool> AddDependencyAsync(int taskId, int dependencyTaskId, string userId);
+    Task<bool> RemoveDependencyAsync(int taskId, int dependencyTaskId, string userId);
+    Task<IEnumerable<TaskActivityLogResponse>> GetActivityLogsAsync(int taskId, string userId);
 }

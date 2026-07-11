@@ -15,4 +15,10 @@ public interface ITaskRepository
     Task<UserTask?> GetAssignmentAsync(int taskId, string userId, bool includeDeleted = false);
     Task AddAssignmentAsync(UserTask assignment);
     Task UpdateAssignmentAsync(UserTask assignment);
+    Task<TaskDependent?> GetDependencyAsync(int taskId, int dependedTaskId);
+    Task AddDependencyAsync(TaskDependent dependency);
+    Task RemoveDependencyAsync(TaskDependent dependency);
+    Task<List<int>> GetDependedTaskIdsAsync(int taskId);
+    Task AddActivityLogAsync(TaskActivityLog log);
+    Task<IEnumerable<TaskActivityLog>> GetActivityLogsByTaskIdAsync(int taskId);
 }
