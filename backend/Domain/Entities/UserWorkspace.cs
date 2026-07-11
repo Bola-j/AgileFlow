@@ -17,7 +17,7 @@ public class UserWorkspace
     public DateTime JoinedAt { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime? DeletedAt { get; private set; }
-
+    public DateTime? UpdatedAt { get; private set; }
     private UserWorkspace() { }
 
     public UserWorkspace(string appUserId, int workspaceId, UserRole role = UserRole.Developer)
@@ -28,11 +28,28 @@ public class UserWorkspace
         JoinedAt = DateTime.UtcNow;
     }
 
-    public void UpdateRole(UserRole role) => Role = role;
+    private void Update()
+    {
+        UpdatedAt = DateTime.UtcNow;
+    }
 
+    public void UpdateRole(UserRole role)
+    {
+        Role = role;
+        Update();
+    }
     public void Delete()
     {
         IsDeleted = true;
         DeletedAt = DateTime.UtcNow;
+        Update();
+    }
+
+    public void Restore(UserRole role)
+    {
+        IsDeleted = false;
+        DeletedAt = null;
+        Role = role;
+        Update();
     }
 }

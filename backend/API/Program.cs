@@ -107,6 +107,7 @@ internal class Program
 
         // ──  Repositories ──────────────────────────────────────────────────────
         builder.Services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
+        builder.Services.AddScoped<IUserWorkspaceRepository, UserWorkspaceRepository>();
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
         builder.Services.AddScoped<ISprintRepository, SprintRepository>();
