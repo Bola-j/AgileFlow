@@ -1,0 +1,95 @@
+﻿using AgileFlow.Domain.Entities;
+using AgileFlow.Infrastructure.Persistence.Data;
+using Application.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Infrastructure.Repositories
+{
+    public class BoardRepository : IBoardRepository
+    {
+        private readonly AgileFlowDbContext _context;
+
+        public BoardRepository(AgileFlowDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<Board?> GetByIdAsync(int id)
+        {
+            return await _context.Boards.FindAsync(id);
+        }
+
+        public async Task<IEnumerable<Board>> GetBoardsByProjectIdAsync(int projectId)
+        {
+            return await _context.Boards
+                .Where(b => b.ProjectId == projectId)
+                .ToListAsync();
+        }
+
+        public async Task AddAsync(Board board)
+        {
+            await _context.Boards.AddAsync(board);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> ProjectHasBoardAsync(int projectId)
+        {
+            return await _context.Boards.AnyAsync(b => b.ProjectId == projectId);
+        }
+
+        public async Task<BoardColumn?> GetColumnByIdAsync(int columnId)
+        {
+            return await _context.BoardColumns
+                .Include(c => c.Board) 
+                .FirstOrDefaultAsync(c => c.Id == columnId);
+        }
+
+        public async Task AddColumnAsync(BoardColumn column)
+        {
+            await _context.BoardColumns.AddAsync(column);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateColumnAsync(BoardColumn column)
+        {
+            _context.BoardColumns.Update(column);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteColumnAsync(BoardColumn column)
+        {
+            _context.BoardColumns.Remove(column);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<int> GetColumnsCountAsync(int boardId)
+        {
+            return await _context.BoardColumns.CountAsync(c => c.BoardId == boardId);
+        }
+
+        public async Task UpdateColumnsOrderAsync(List<BoardColumn> columns)
+        {
+            foreach (var column in columns)
+            {
+                _context.Entry(column).Property(c => c.Position).IsModified = true;
+            }
+            await _context.SaveChangesAsync();
+        }
+
+
+        public async Task<Board?> GetBoardWithDetailsByIdAsync(int boardId)
+        {
+            return await _context.Boards
+                .Include(b => b.BoardColumns.Where(c => !c.IsDeleted).OrderBy(c => c.Position))
+                    .ThenInclude(c => c.Tasks.Where(t => !t.IsDeleted))
+                        .ThenInclude(t => t.UserTasks.Where(ut => !ut.IsDeleted))
+                            .ThenInclude(ut => ut.AppUser)
+                .FirstOrDefaultAsync(b => b.Id == boardId);
+        }
+    }
+}

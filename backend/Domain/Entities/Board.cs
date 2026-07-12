@@ -9,7 +9,6 @@ namespace AgileFlow.Domain.Entities
         public Project Project { get; private set; } = null!;
 
         private Board() { }
-
         public Board(string name, int projectId)
         {
             Name = name;

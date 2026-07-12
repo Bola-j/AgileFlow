@@ -15,9 +15,9 @@ namespace AgileFlow.Infrastructure.Persistence.Configurations
         {
             builder.HasKey(b => b.Id);
 
-            builder.Property(b => b.Name)
-                .IsRequired()
-                .HasMaxLength(100);
+            //builder.Property(b => b.Name)
+            //    .IsRequired()
+            //    .HasMaxLength(100);
 
             builder.Property(b => b.CreatedAt)
                 .IsRequired();

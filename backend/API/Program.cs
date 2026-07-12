@@ -112,6 +112,7 @@ internal class Program
         builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
         builder.Services.AddScoped<ISprintRepository, SprintRepository>();
         builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+        builder.Services.AddScoped<IBoardRepository, BoardRepository>();
 
         // ── Application services ──────────────────────────────────────────────────────
         builder.Services.AddScoped<ITokenService, TokenService>();
@@ -122,6 +123,7 @@ internal class Program
         builder.Services.AddScoped<IProjectService, ProjectService>();
         builder.Services.AddScoped<ISprintService, SprintService>();
         builder.Services.AddScoped<ITaskService, TaskService>();
+        builder.Services.AddScoped<IBoardService, BoardService>();
 
         // ── CORS (Vite dev server) ────────────────────────────────────────────────────
         builder.Services.AddCors(options =>
