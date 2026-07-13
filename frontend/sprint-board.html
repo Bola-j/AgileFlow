@@ -17,7 +17,11 @@
     <nav class="navbar navbar-dark bg-dark mb-4">
         <div class="container">
             <a class="navbar-brand" href="workspaces.html">AgileFlow</a>
-            <button class="btn btn-primary" id="create-task-btn">Create Task</button>
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary" id="create-task-btn">Create Task</button>
+                <a href="profile.html" class="btn btn-outline-light">Profile</a>
+                <button class="btn btn-danger" id="logout-btn">Logout</button>
+            </div>
         </div>
     </nav>
 
@@ -29,17 +33,17 @@
         <div class="row">
             <div class="col-md-4 mb-3">
                 <h4 class="text-secondary text-center mb-3">To Do</h4>
-                <div class="board-column" id="todo-column"></div>
+                <div class="board-column" id="todo-column" ondrop="drop(event, 'To Do')" ondragover="allowDrop(event)"></div>
             </div>
             
             <div class="col-md-4 mb-3">
                 <h4 class="text-primary text-center mb-3">In Progress</h4>
-                <div class="board-column" id="inprogress-column"></div>
+                <div class="board-column" id="inprogress-column" ondrop="drop(event, 'In Progress')" ondragover="allowDrop(event)"></div>
             </div>
             
             <div class="col-md-4 mb-3">
                 <h4 class="text-success text-center mb-3">Done</h4>
-                <div class="board-column" id="done-column"></div>
+                <div class="board-column" id="done-column" ondrop="drop(event, 'Done')" ondragover="allowDrop(event)"></div>
             </div>
         </div>
     </div>

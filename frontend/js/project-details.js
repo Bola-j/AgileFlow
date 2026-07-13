@@ -83,3 +83,19 @@ projectForm.addEventListener('submit', (e) => {
     projectForm.reset();
     projectModal.hide();
 });
+
+const logoutBtn = document.getElementById('logout-btn');
+
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+
+        const isConfirmed = confirm("Are you sure you want to logout?");
+        
+        if (isConfirmed) {
+
+            localStorage.removeItem('agileflow_token');
+            
+            window.location.href = 'login.html';
+        }
+    });
+}

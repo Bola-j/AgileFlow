@@ -28,7 +28,9 @@ function renderTasks() {
     projectTasks.forEach(task => {
   
         const taskCard = `
-            <div class="card task-card mb-3 shadow-sm border-start border-4 ${getBorderColor(task.status)}">
+            <div class="card task-card mb-3 shadow-sm border-start border-4 ${getBorderColor(task.status)}" 
+                 draggable="true" 
+                 ondragstart="drag(event, ${task.id})">
                 <div class="card-body p-2">
                     <h6 class="card-title m-0">${task.title}</h6>
                 </div>
@@ -48,6 +50,25 @@ function getBorderColor(status) {
     if (status === "In Progress") return "border-primary";
     if (status === "Done") return "border-success";
     return "";
+}
+
+function drag(event, taskId) {
+    event.dataTransfer.setData("text", taskId);
+}
+
+function allowDrop(event) {
+    event.preventDefault();
+}
+
+function drop(event, newStatus) {
+    event.preventDefault();
+    const taskId = parseInt(event.dataTransfer.getData("text"));
+    
+    const taskIndex = mockTasks.findIndex(t => t.id === taskId);
+    if (taskIndex !== -1) {
+        mockTasks[taskIndex].status = newStatus;
+        renderTasks();
+    }
 }
 
 renderTasks();
@@ -74,3 +95,19 @@ taskForm.addEventListener('submit', (e) => {
     taskForm.reset();
     taskModal.hide();
 });
+
+const logoutBtn = document.getElementById('logout-btn');
+
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+
+        const isConfirmed = confirm("Are you sure you want to logout?");
+        
+        if (isConfirmed) {
+
+            localStorage.removeItem('agileflow_token');
+            
+            window.location.href = 'login.html';
+        }
+    });
+}
