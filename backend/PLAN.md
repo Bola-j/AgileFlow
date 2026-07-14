@@ -234,20 +234,15 @@ The MVP is done when a team can log in, create a workspace and project, create s
   - active sprint
   - seeded board
   - tasks with mixed states, dependencies, comments, commits, notifications
-- Update `docker-compose` to include:
-  - SQL Server
-  - API
-  - frontend
-  - local mail catcher if used for demo
 - Add concise setup and demo docs:
   - local run steps
   - webhook test steps
   - email catcher test steps
   - acceptance flow for presentation
-- Make sure one command can bring the demo environment up locally.
+- Make sure the demo environment can be brought up locally with concise setup steps.
 
 **Acceptance**
-- `docker compose up` produces a demo-ready environment.
+- Local setup steps produce a demo-ready environment.
 - The presentation flow can be run without manual data setup.
 
 ## Public APIs and Types to Add

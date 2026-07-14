@@ -191,9 +191,16 @@ namespace Infrastructure.Services
 
             if (request.Dob.HasValue)
                 user.SetDOB(request.Dob.Value);
+            else if (request.ClearDob)
+                user.ClearDOB();
 
             if (request.GithubUsername is not null)
-                user.SetGithubUsername(request.GithubUsername);
+            {
+                if (string.IsNullOrWhiteSpace(request.GithubUsername))
+                    user.SetGithubUsername(string.Empty);
+                else
+                    user.SetGithubUsername(request.GithubUsername);
+            }
 
             await _userRepository.UpdateAsync(user);
         }

@@ -37,21 +37,4 @@ namespace Application.DTOs.Account
         [MaxLength(100, ErrorMessage = "GithubUsername cannot exceed 100 characters.")]
         public string? GithubUsername { get; set; }
     }
-
-    public class ChangePasswordRequest
-    {
-        [Required(ErrorMessage = "Current password is required.")]
-        public string CurrentPassword { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "New password is required.")]
-        [MinLength(6, ErrorMessage = "New password must be at least 6 characters long.")]
-        public string NewPassword { get; set; } = string.Empty;
-    }
-
-    public class ChangeEmailRequest
-    {
-        [Required(ErrorMessage = "New email is required.")]
-        [EmailAddress(ErrorMessage = "Invalid email address format.")]
-        public string NewEmail { get; set; } = string.Empty;
-    }
 }

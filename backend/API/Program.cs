@@ -134,6 +134,7 @@ internal class Program
 
         // ─────────────────────────────────────────────────────────────────────────────
         var app = builder.Build();
+        ApplyDatabaseMigrations(app);
 
         if (app.Environment.IsDevelopment())
         {
@@ -152,4 +153,17 @@ internal class Program
         app.MapControllers();
         app.Run();
     }
-}       
+
+    private static void ApplyDatabaseMigrations(WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var logger = scope.ServiceProvider
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger("DatabaseMigration");
+        var dbContext = scope.ServiceProvider.GetRequiredService<AgileFlowDbContext>();
+
+        logger.LogInformation("Applying database migrations.");
+        dbContext.Database.Migrate();
+        logger.LogInformation("Database is up to date.");
+    }
+}

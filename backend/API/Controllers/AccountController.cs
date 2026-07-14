@@ -49,45 +49,4 @@ public class AccountController : ControllerBase
             return Conflict(new { message = ex.Message });
         }
     }
-
-    [HttpPut("change-password")]
-    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
-        try
-        {
-            var success = await _accountService.ChangePasswordAsync(UserId, request);
-            if (!success)
-                return NotFound(new { message = "Authenticated user was not found." });
-
-            return Ok(new { message = "Password updated successfully." });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-    }
-
-    [HttpPut("change-email")]
-    public async Task<IActionResult> ChangeEmail([FromBody] ChangeEmailRequest request)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
-        try
-        {
-            var success = await _accountService.ChangeEmailAsync(UserId, request);
-            if (!success)
-                return NotFound(new { message = "Authenticated user was not found." });
-
-            return Ok(new { message = "Email updated successfully. Please use your new email for future logins." });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { message = ex.Message });
-        }
-    }
-
 }

@@ -74,7 +74,7 @@ namespace Application.DTOs.Workspace
         public UserRole Role { get; set; }
     }
 
-    public class UpdateMemberProfileByAdminRequest
+    public class UpdateMemberProfileByAdminRequest : IValidatableObject
     {
         [StringLength(50, ErrorMessage = "First name cannot exceed 50 characters.")]
         public string? FirstName { get; set; }
@@ -86,7 +86,18 @@ namespace Application.DTOs.Workspace
         public string? PhoneNumber { get; set; }
         public string? ProfilePicture { get; set; }
         public DateOnly? Dob { get; set; }
+        public bool ClearDob { get; set; }
         public string? GithubUsername { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (Dob.HasValue && ClearDob)
+            {
+                yield return new ValidationResult(
+                    "DOB cannot be set and cleared in the same request.",
+                    new[] { nameof(Dob), nameof(ClearDob) });
+            }
+        }
     }
     public class WorkspaceMemberDetailResponse
     {
