@@ -121,6 +121,9 @@ namespace Infrastructure.Services
                 ?? throw new KeyNotFoundException($"Board for project {projectId} was not found.");
 
             int currentColumnsCount = await _boardRepository.GetColumnsCountAsync(board.Id);
+            
+            if(currentColumnsCount == 4)
+                throw new InvalidOperationException("A board can have at most 4 columns.");
 
             var newColumn = new BoardColumn(request.ColumnName, board.Id);
             newColumn.UpdatePosition(currentColumnsCount);
