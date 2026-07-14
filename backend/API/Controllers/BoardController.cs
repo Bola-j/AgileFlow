@@ -21,11 +21,11 @@ namespace API.Controllers
         private string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
         [HttpGet("projects/{projectId:int}/board")]
-        public async Task<ActionResult<GetBoardDetailsResponse>> GetBoardDetails(int projectId)
+        public async Task<ActionResult<GetBoardDetailsResponse>> GetBoardDetails(int projectId,[FromQuery] int sprintId)
         {
             try
             {
-                var boardDetails = await _boardService.GetBoardDetailsAsync(projectId, UserId);
+                var boardDetails = await _boardService.GetBoardDetailsAsync(projectId, sprintId, UserId);
 
                 if (boardDetails is null)
                     return NotFound(new { message = $"Board for project {projectId} was not found." });

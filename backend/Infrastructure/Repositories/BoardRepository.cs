@@ -74,13 +74,19 @@ namespace Infrastructure.Repositories
             }
             await _context.SaveChangesAsync();
         }
+        public async Task<List<BoardColumn>> GetColumnsByProjectIdAsync(int projectId)
+        {
+            return await _context.BoardColumns
+                .Where(c => c.Board.ProjectId == projectId && !c.IsDeleted)
+                .OrderBy(c => c.Position)
+                .ToListAsync();
+        }
 
-
-        public async Task<Board?> GetBoardWithDetailsByProjectIdAsync(int projectId)
+        public async Task<Board?> GetBoardWithDetailsByProjectIdAsync(int projectId,int sprintId)
         {
             return await _context.Boards
                 .Include(b => b.BoardColumns.Where(c => !c.IsDeleted).OrderBy(c => c.Position))
-                    .ThenInclude(c => c.Tasks.Where(t => !t.IsDeleted))
+                    .ThenInclude(c => c.Tasks.Where(t => !t.IsDeleted && t.SprintId == sprintId))
                         .ThenInclude(t => t.UserTasks.Where(ut => !ut.IsDeleted))
                             .ThenInclude(ut => ut.AppUser)
                 .FirstOrDefaultAsync(b => b.ProjectId == projectId);

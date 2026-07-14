@@ -29,12 +29,13 @@ namespace Infrastructure.Services
 
         public async Task<GetBoardDetailsResponse?> GetBoardDetailsAsync(
             int projectId,
+            int sprintId,
             string currentUserId)
         {
             await _authorizationService.EnsureProjectMemberAsync(
             projectId,
             currentUserId);
-            var board = await _boardRepository.GetBoardWithDetailsByProjectIdAsync(projectId);
+            var board = await _boardRepository.GetBoardWithDetailsByProjectIdAsync(projectId, sprintId);
 
             if (board is null)
                 return null;
@@ -109,21 +110,21 @@ namespace Infrastructure.Services
                 UserRole.Admin,
                 UserRole.TeamLead);
 
-            var board = await _boardRepository.GetBoardWithDetailsByProjectIdAsync(projectId)
-                ?? throw new KeyNotFoundException($"Board for project {projectId} was not found.");
+            var columns = await _boardRepository.GetColumnsByProjectIdAsync(projectId);
+
+            if (!columns.Any())
+                throw new KeyNotFoundException($"No columns found for project {projectId}.");
 
             for (int i = 0; i < request.OrderedColumnIds.Count; i++)
             {
                 var colId = request.OrderedColumnIds[i];
-
-                var column = board.BoardColumns.FirstOrDefault(c => c.Id == colId);
-
+                var column = columns.FirstOrDefault(c => c.Id == colId);
                 if (column is null)
                     throw new InvalidOperationException($"Column with id {colId} does not belong to this board.");
-
                 column.UpdatePosition(i);
             }
-            await _boardRepository.UpdateColumnsOrderAsync(board.BoardColumns.ToList());
+
+            await _boardRepository.UpdateColumnsOrderAsync(columns);
         }
     }
 }
