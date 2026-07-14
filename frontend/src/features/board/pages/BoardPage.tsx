@@ -17,8 +17,10 @@ import { ConfirmDialog, Modal } from "@/components/ui/dialog";
 import { Field, Input, SelectInput, Textarea } from "@/components/ui/forms";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/state";
 import { boardApi } from "@/features/board/api/boardApi";
+import { projectsApi } from "@/features/projects/api/projectsApi";
 import { tasksApi } from "@/features/tasks/api/tasksApi";
 import { TaskDetailModal } from "@/features/tasks/components/TaskDetailModal";
+import { workspaceApi } from "@/features/workspace/api/workspaceApi";
 import { cn, formatDate } from "@/lib/utils";
 import { getErrorMessage } from "@/services/apiClient";
 import { ColumnResponse, ProjectTaskPriority, ProjectTaskStatus, TaskSummaryResponse } from "@/types/api";
@@ -40,6 +42,8 @@ export function BoardPage() {
   const [taskOpen, setTaskOpen] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
   const board = useQuery({ queryKey: queryKeys.board(projectId, sprintId), queryFn: () => boardApi.get(projectId, sprintId), enabled: Number.isFinite(projectId) && Number.isFinite(sprintId) && sprintId > 0 });
+  const project = useQuery({ queryKey: queryKeys.project(projectId), queryFn: () => projectsApi.get(projectId), enabled: Number.isFinite(projectId) });
+  const workspace = useQuery({ queryKey: project.data ? queryKeys.workspace(project.data.workspaceId) : ["workspace", "none"], queryFn: () => workspaceApi.get(project.data?.workspaceId ?? 0), enabled: Boolean(project.data?.workspaceId) });
   const columnForm = useForm<z.infer<typeof columnSchema>>({ resolver: zodResolver(columnSchema), defaultValues: { columnName: "" } });
   const renameForm = useForm<z.infer<typeof renameSchema>>({ resolver: zodResolver(renameSchema), values: { newName: renameColumn?.name ?? "" } });
   const taskForm = useForm<z.infer<typeof taskSchema>>({ resolver: zodResolver(taskSchema), values: { title: "", description: "", status: ProjectTaskStatus.Todo, priority: ProjectTaskPriority.Medium, dueDate: "", columnId: board.data?.columns[0]?.id ?? 0 } });
@@ -92,7 +96,7 @@ export function BoardPage() {
       <Modal open={renameColumn !== null} onOpenChange={(open) => !open && setRenameColumn(null)} title="Rename column"><form className="grid gap-4" onSubmit={renameForm.handleSubmit((values) => updateColumn.mutate(values))}><Field label="New name"><Input {...renameForm.register("newName")} /></Field><Button disabled={updateColumn.isPending}>{updateColumn.isPending ? "Saving..." : "Save"}</Button></form></Modal>
       <Modal open={taskOpen} onOpenChange={setTaskOpen} title="Create task"><form className="grid gap-4" onSubmit={taskForm.handleSubmit((values) => createTask.mutate(values))}><Field label="Title"><Input {...taskForm.register("title")} /></Field><Field label="Description"><Textarea {...taskForm.register("description")} /></Field><div className="grid gap-4 sm:grid-cols-2"><Field label="Column"><SelectInput {...taskForm.register("columnId", { valueAsNumber: true })}>{columns.map((column) => <option key={column.id} value={column.id}>{column.name}</option>)}</SelectInput></Field><Field label="Due date"><Input type="date" {...taskForm.register("dueDate")} /></Field></div><div className="grid gap-4 sm:grid-cols-2"><Field label="Status"><SelectInput {...taskForm.register("status", { valueAsNumber: true })}><option value={ProjectTaskStatus.Todo}>Todo</option><option value={ProjectTaskStatus.InProgress}>In progress</option><option value={ProjectTaskStatus.Done}>Done</option><option value={ProjectTaskStatus.Cancelled}>Cancelled</option></SelectInput></Field><Field label="Priority"><SelectInput {...taskForm.register("priority", { valueAsNumber: true })}><option value={ProjectTaskPriority.Low}>Low</option><option value={ProjectTaskPriority.Medium}>Medium</option><option value={ProjectTaskPriority.High}>High</option><option value={ProjectTaskPriority.Critical}>Critical</option></SelectInput></Field></div><Button disabled={createTask.isPending}>{createTask.isPending ? "Creating..." : "Create"}</Button></form></Modal>
       <ConfirmDialog open={deleteColumn !== null} onOpenChange={(open) => !open && setDeleteColumn(null)} title="Delete column" description="This deletes the board column if authorized by the backend." busy={removeColumn.isPending} onConfirm={() => deleteColumn && removeColumn.mutate(deleteColumn)} />
-      <TaskDetailModal taskId={taskId} open={taskId !== null} onOpenChange={(open) => !open && setTaskId(null)} onChanged={() => void invalidate()} />
+      <TaskDetailModal taskId={taskId} open={taskId !== null} onOpenChange={(open) => !open && setTaskId(null)} onChanged={() => void invalidate()} workspaceMembers={workspace.data?.members ?? []} />
     </>
   );
 }

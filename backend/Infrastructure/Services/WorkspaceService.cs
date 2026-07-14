@@ -100,13 +100,13 @@ namespace Infrastructure.Services
         public async Task AddMemberAsync(int workspaceId, AddWorkspaceMemberRequest request, string currentUserId)
         {
             await _authorizationService.EnsureRoleAsync(workspaceId, currentUserId, WorkspaceManagerRoles);
-            var targetUser = await _userRepository.GetByIdAsync(request.UserId);
+            var targetUser = await ResolveUserAsync(request.Email, request.UserId);
             if (targetUser is null)
-                throw new KeyNotFoundException($"User with id '{request.UserId}' does not exist in the system.");
+                throw new KeyNotFoundException($"User with email '{request.Email}' does not exist in the system.");
             var workspace = await _workspaceRepository.GetByIdAsync(workspaceId);
             if (workspace is null)
                 throw new KeyNotFoundException("Workspace not found.");
-            var membership = await _userWorkspaceRepository.GetMembershipAsync(workspaceId, request.UserId);
+            var membership = await _userWorkspaceRepository.GetMembershipAsync(workspaceId, targetUser.Id);
             if (membership is not null)
             {
                 if (!membership.IsDeleted)
@@ -115,7 +115,7 @@ namespace Infrastructure.Services
                 await _userWorkspaceRepository.UpdateAsync(membership);
                 return;
             }
-            var newMembership = new UserWorkspace(request.UserId, workspaceId, request.Role);
+            var newMembership = new UserWorkspace(targetUser.Id, workspaceId, request.Role);
             await _userWorkspaceRepository.AddAsync(newMembership);
         }
 
@@ -143,6 +143,7 @@ namespace Infrastructure.Services
         public async Task RemoveMemberAsync(int workspaceId, string memberUserId, string currentUserId)
         {
             await _authorizationService.EnsureRoleAsync(workspaceId, currentUserId, WorkspaceManagerRoles);
+            memberUserId = await ResolveUserIdAsync(memberUserId);
             if (memberUserId == currentUserId)
                 throw new InvalidOperationException("You cannot remove yourself from the workspace.");
             var membership = await _userWorkspaceRepository.GetMembershipAsync(workspaceId, memberUserId);
@@ -210,6 +211,27 @@ namespace Infrastructure.Services
         private static bool IsWorkspaceManager(UserRole role)
         {
             return role is UserRole.Admin or UserRole.TeamLead;
+        }
+
+        private async Task<AgileFlow.Domain.Entities.AppUser?> ResolveUserAsync(string? email, string? userId)
+        {
+            if (!string.IsNullOrWhiteSpace(email))
+                return await _userRepository.GetByEmailAsync(email.Trim());
+
+            if (!string.IsNullOrWhiteSpace(userId))
+                return await _userRepository.GetByIdAsync(userId.Trim());
+
+            throw new ArgumentException("Member email is required.");
+        }
+
+        private async Task<string> ResolveUserIdAsync(string userIdOrEmail)
+        {
+            var decoded = Uri.UnescapeDataString(userIdOrEmail).Trim();
+            if (!decoded.Contains('@'))
+                return decoded;
+
+            var user = await _userRepository.GetByEmailAsync(decoded);
+            return user?.Id ?? throw new KeyNotFoundException($"User with email '{decoded}' does not exist in the system.");
         }
 
         public async Task<WorkspaceMemberDetailResponse> GetWorkspaceMemberDetailAsync(int workspaceId, string memberUserId, string currentUserId)

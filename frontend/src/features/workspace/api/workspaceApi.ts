@@ -19,7 +19,7 @@ export const workspaceApi = {
   addMember: async (workspaceId: number, payload: AddWorkspaceMemberRequest) => apiClient.post(`/api/Workspaces/${workspaceId}/members`, payload),
   updateMemberRole: async (workspaceId: number, memberUserId: string, payload: UpdateWorkspaceMemberRoleRequest) =>
     apiClient.put(`/api/Workspaces/${workspaceId}/members/${memberUserId}/role`, payload),
-  removeMember: async (workspaceId: number, memberUserId: string) => apiClient.delete(`/api/Workspaces/${workspaceId}/members/${memberUserId}`),
+  removeMember: async (workspaceId: number, memberEmail: string) => apiClient.delete(`/api/Workspaces/${workspaceId}/members/${encodeURIComponent(memberEmail)}`),
   updateMemberProfile: async (workspaceId: number, memberUserId: string, payload: UpdateMemberProfileByAdminRequest) =>
     apiClient.put(`/api/Workspaces/${workspaceId}/members/${memberUserId}`, payload),
   getMember: async (workspaceId: number, memberUserId: string) =>

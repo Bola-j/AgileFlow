@@ -76,7 +76,8 @@ export interface CreateWorkspaceRequest {
 export type UpdateWorkspaceRequest = CreateWorkspaceRequest;
 
 export interface AddWorkspaceMemberRequest {
-  userId: string;
+  email?: string | null;
+  userId?: string | null;
   role: UserRoleValue;
 }
 

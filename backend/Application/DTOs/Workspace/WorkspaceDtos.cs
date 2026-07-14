@@ -25,7 +25,10 @@ namespace Application.DTOs.Workspace
 
     public class AddWorkspaceMemberRequest
     {
-        public string UserId { get; set; }
+        [EmailAddress(ErrorMessage = "Email must be a valid email address.")]
+        public string? Email { get; set; }
+
+        public string? UserId { get; set; }
         public UserRole Role { get; set; }
     }
     public class WorkspaceMemberResponse

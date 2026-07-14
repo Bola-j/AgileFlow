@@ -13,14 +13,26 @@ import { Skeleton } from "@/components/ui/state";
 import { tasksApi } from "@/features/tasks/api/tasksApi";
 import { formatDate } from "@/lib/utils";
 import { getErrorMessage } from "@/services/apiClient";
-import { ProjectTaskPriority, ProjectTaskStatus } from "@/types/api";
+import { ProjectTaskPriority, ProjectTaskStatus, type WorkspaceMemberResponse } from "@/types/api";
 import { queryKeys } from "@/utils/queryKeys";
 
 const taskSchema = z.object({ title: z.string().min(1).max(200), description: z.string().max(2000).optional(), status: z.number(), priority: z.number(), dueDate: z.string().min(1) });
 const userSchema = z.object({ userId: z.string().min(1) });
 const dependencySchema = z.object({ dependencyTaskId: z.number().positive() });
 
-export function TaskDetailModal({ taskId, open, onOpenChange, onChanged }: { taskId: number | null; open: boolean; onOpenChange: (open: boolean) => void; onChanged?: () => void }) {
+export function TaskDetailModal({
+  taskId,
+  open,
+  onOpenChange,
+  onChanged,
+  workspaceMembers = [],
+}: {
+  taskId: number | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onChanged?: () => void;
+  workspaceMembers?: WorkspaceMemberResponse[];
+}) {
   const queryClient = useQueryClient();
   const enabled = open && taskId !== null;
   const task = useQuery({ queryKey: taskId ? queryKeys.task(taskId) : ["task", "none"], queryFn: () => tasksApi.get(taskId ?? 0), enabled });
@@ -65,7 +77,19 @@ export function TaskDetailModal({ taskId, open, onOpenChange, onChanged }: { tas
           <section className="grid gap-3">
             <h3 className="text-sm font-semibold">Assignees</h3>
             <div className="flex flex-wrap gap-2">{task.data.assignees.map((assignee) => <span key={assignee.userId} className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-sm">{assignee.fullName || assignee.email || assignee.userId}<button onClick={() => unassign.mutate(assignee.userId)} aria-label="Remove assignee"><X className="h-3 w-3" /></button></span>)}</div>
-            <form className="flex gap-2" onSubmit={userForm.handleSubmit((values) => assign.mutate(values))}><Input placeholder="User id" {...userForm.register("userId")} /><Button><UserPlus className="h-4 w-4" />Assign</Button></form>
+            <form className="flex gap-2" onSubmit={userForm.handleSubmit((values) => assign.mutate(values))}>
+              <SelectInput className="min-w-0 flex-1" {...userForm.register("userId")}>
+                <option value="">Select a workspace member</option>
+                {workspaceMembers
+                  .filter((member) => !task.data.assignees.some((assignee) => assignee.userId === member.userId))
+                  .map((member) => (
+                    <option key={member.userId} value={member.userId}>
+                      {member.fullName || member.email} ({member.email})
+                    </option>
+                  ))}
+              </SelectInput>
+              <Button disabled={assign.isPending || workspaceMembers.length === 0}><UserPlus className="h-4 w-4" />Assign</Button>
+            </form>
           </section>
           <section className="grid gap-3">
             <h3 className="text-sm font-semibold">Dependencies</h3>
