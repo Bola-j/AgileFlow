@@ -23,36 +23,18 @@ public class TaskController : ControllerBase
     [HttpGet("sprints/{sprintId:int}/tasks")]
     public async Task<ActionResult<IEnumerable<TaskSummaryResponse>>> GetBySprint(int sprintId)
     {
-        try
-        {
-            var tasks = await _taskService.GetBySprintAsync(sprintId, UserId);
-            return Ok(tasks);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-        }
+        var tasks = await _taskService.GetBySprintAsync(sprintId, UserId);
+        return Ok(tasks);
     }
 
     [HttpGet("tasks/{id:int}")]
     public async Task<ActionResult<TaskDetailResponse>> GetById(int id)
     {
-        try
-        {
-            var task = await _taskService.GetByIdAsync(id, UserId);
-            if (task is null)
-                return NotFound(new { message = $"Task with id {id} not found." });
+        var task = await _taskService.GetByIdAsync(id, UserId);
+        if (task is null)
+            return NotFound(new { message = $"Task with id {id} not found." });
 
-            return Ok(task);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-        }
+        return Ok(task);
     }
 
     [HttpPost("sprints/{sprintId:int}/tasks")]
@@ -61,23 +43,8 @@ public class TaskController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        try
-        {
-            var created = await _taskService.CreateAsync(sprintId, request, UserId);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { message = ex.Message });
-        }
+        var created = await _taskService.CreateAsync(sprintId, request, UserId);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     [HttpPut("tasks/{id:int}")]
@@ -86,39 +53,21 @@ public class TaskController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        try
-        {
-            var updated = await _taskService.UpdateAsync(id, request, UserId);
-            if (updated is null)
-                return NotFound(new { message = $"Task with id {id} not found." });
+        var updated = await _taskService.UpdateAsync(id, request, UserId);
+        if (updated is null)
+            return NotFound(new { message = $"Task with id {id} not found." });
 
-            return Ok(updated);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { message = ex.Message });
-        }
+        return Ok(updated);
     }
 
     [HttpPatch("tasks/{id:int}/status")]
     public async Task<ActionResult<TaskDetailResponse>> UpdateStatus(int id, [FromBody] UpdateTaskStatusRequest request)
     {
-        try
-        {
-            var updated = await _taskService.UpdateStatusAsync(id, request, UserId);
-            if (updated is null)
-                return NotFound(new { message = $"Task with id {id} not found." });
+        var updated = await _taskService.UpdateStatusAsync(id, request, UserId);
+        if (updated is null)
+            return NotFound(new { message = $"Task with id {id} not found." });
 
-            return Ok(updated);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-        }
+        return Ok(updated);
     }
 
     [HttpPut("tasks/{id:int}/move")]
@@ -127,26 +76,11 @@ public class TaskController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        try
-        {
-            var updated = await _taskService.MoveAsync(id, request, UserId);
-            if (updated is null)
-                return NotFound(new { message = $"Task with id {id} not found." });
+        var updated = await _taskService.MoveAsync(id, request, UserId);
+        if (updated is null)
+            return NotFound(new { message = $"Task with id {id} not found." });
 
-            return Ok(updated);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { message = ex.Message });
-        }
+        return Ok(updated);
     }
 
     [HttpPost("tasks/{id:int}/assignees")]
@@ -155,105 +89,51 @@ public class TaskController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        try
-        {
-            var updated = await _taskService.AssignUserAsync(id, request, UserId);
-            if (updated is null)
-                return NotFound(new { message = $"Task with id {id} not found." });
+        var updated = await _taskService.AssignUserAsync(id, request, UserId);
+        if (updated is null)
+            return NotFound(new { message = $"Task with id {id} not found." });
 
-            return Ok(updated);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-        }
+        return Ok(updated);
     }
 
     [HttpDelete("tasks/{id:int}/assignees/{assigneeUserId}")]
     public async Task<ActionResult<TaskDetailResponse>> UnassignUser(int id, string assigneeUserId)
     {
-        try
-        {
-            var updated = await _taskService.UnassignUserAsync(id, assigneeUserId, UserId);
-            if (updated is null)
-                return NotFound(new { message = $"Task with id {id} not found." });
+        var updated = await _taskService.UnassignUserAsync(id, assigneeUserId, UserId);
+        if (updated is null)
+            return NotFound(new { message = $"Task with id {id} not found." });
 
-            return Ok(updated);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-        }
+        return Ok(updated);
     }
 
     [HttpDelete("tasks/{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        try
-        {
-            var deleted = await _taskService.DeleteAsync(id, UserId);
-            if (!deleted)
-                return NotFound(new { message = $"Task with id {id} not found." });
+        var deleted = await _taskService.DeleteAsync(id, UserId);
+        if (!deleted)
+            return NotFound(new { message = $"Task with id {id} not found." });
 
-            return NoContent();
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-        }
+        return NoContent();
     }
 
     [HttpPost("tasks/{id:int}/dependencies/{dependencyTaskId:int}")]
     public async Task<IActionResult> AddDependency(int id, int dependencyTaskId)
     {
-        try
-        {
-            await _taskService.AddDependencyAsync(id, dependencyTaskId, UserId);
-            return Ok(new { message = "Dependency added successfully." });
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { message = ex.Message });
-        }
+        await _taskService.AddDependencyAsync(id, dependencyTaskId, UserId);
+        return Ok(new { message = "Dependency added successfully." });
     }
 
     [HttpDelete("tasks/{id:int}/dependencies/{dependencyTaskId:int}")]
     public async Task<IActionResult> RemoveDependency(int id, int dependencyTaskId)
     {
-        try
-        {
-            await _taskService.RemoveDependencyAsync(id, dependencyTaskId, UserId);
-            return Ok(new { message = "Dependency removed successfully." });
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-        }
+        await _taskService.RemoveDependencyAsync(id, dependencyTaskId, UserId);
+        return Ok(new { message = "Dependency removed successfully." });
     }
 
     [HttpGet("tasks/{id:int}/activity-logs")]
     public async Task<ActionResult<IEnumerable<TaskActivityLogResponse>>> GetActivityLogs(int id)
     {
-        try
-        {
-            var logs = await _taskService.GetActivityLogsAsync(id, UserId);
-            return Ok(logs);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-        }
+        var logs = await _taskService.GetActivityLogsAsync(id, UserId);
+        return Ok(logs);
     }
 }

@@ -134,6 +134,7 @@ internal class Program
 
         // ─────────────────────────────────────────────────────────────────────────────
         var app = builder.Build();
+        app.UseMiddleware<API.Middleware.ExceptionHandlingMiddleware>();
         ApplyDatabaseMigrations(app);
 
         if (app.Environment.IsDevelopment())

@@ -76,6 +76,7 @@ public class TaskSummaryResponse
     public int SprintId { get; set; }
     public int ColumnId { get; set; }
     public List<TaskAssigneeResponse> Assignees { get; set; } = new();
+    public List<string> VisibilityReasons { get; set; } = new();
 }
 
 public class TaskDetailResponse : TaskSummaryResponse

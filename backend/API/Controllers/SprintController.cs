@@ -23,36 +23,18 @@ public class SprintController : ControllerBase
     [HttpGet("projects/{projectId:int}/sprints")]
     public async Task<ActionResult<IEnumerable<SprintResponse>>> GetByProject(int projectId)
     {
-        try
-        {
-            var sprints = await _sprintService.GetByProjectIdAsync(projectId, UserId);
-            return Ok(sprints);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-        }
+        var sprints = await _sprintService.GetByProjectIdAsync(projectId, UserId);
+        return Ok(sprints);
     }
 
     [HttpGet("sprints/{id:int}")]
     public async Task<ActionResult<SprintResponse>> GetById(int id)
     {
-        try
-        {
-            var sprint = await _sprintService.GetByIdAsync(id, UserId);
-            if (sprint is null)
-                return NotFound(new { message = $"Sprint with id {id} not found." });
+        var sprint = await _sprintService.GetByIdAsync(id, UserId);
+        if (sprint is null)
+            return NotFound(new { message = $"Sprint with id {id} not found." });
 
-            return Ok(sprint);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-        }
+        return Ok(sprint);
     }
 
     [HttpPost("projects/{projectId:int}/sprints")]
@@ -61,23 +43,8 @@ public class SprintController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        try
-        {
-            var created = await _sprintService.CreateAsync(projectId, request, UserId);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { message = ex.Message });
-        }
+        var created = await _sprintService.CreateAsync(projectId, request, UserId);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     [HttpPut("sprints/{id:int}")]
@@ -86,80 +53,40 @@ public class SprintController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        try
-        {
-            var updated = await _sprintService.UpdateAsync(id, request, UserId);
-            if (updated is null)
-                return NotFound(new { message = $"Sprint with id {id} not found." });
+        var updated = await _sprintService.UpdateAsync(id, request, UserId);
+        if (updated is null)
+            return NotFound(new { message = $"Sprint with id {id} not found." });
 
-            return Ok(updated);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { message = ex.Message });
-        }
+        return Ok(updated);
     }
 
     [HttpPut("sprints/{id:int}/start")]
     public async Task<ActionResult<SprintResponse>> Start(int id)
     {
-        try
-        {
-            var updated = await _sprintService.StartAsync(id, UserId);
-            if (updated is null)
-                return NotFound(new { message = $"Sprint with id {id} not found." });
+        var updated = await _sprintService.StartAsync(id, UserId);
+        if (updated is null)
+            return NotFound(new { message = $"Sprint with id {id} not found." });
 
-            return Ok(updated);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { message = ex.Message });
-        }
+        return Ok(updated);
     }
 
     [HttpPut("sprints/{id:int}/complete")]
     public async Task<ActionResult<SprintResponse>> Complete(int id)
     {
-        try
-        {
-            var updated = await _sprintService.CompleteAsync(id, UserId);
-            if (updated is null)
-                return NotFound(new { message = $"Sprint with id {id} not found." });
+        var updated = await _sprintService.CompleteAsync(id, UserId);
+        if (updated is null)
+            return NotFound(new { message = $"Sprint with id {id} not found." });
 
-            return Ok(updated);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { message = ex.Message });
-        }
+        return Ok(updated);
     }
 
     [HttpGet("sprints/{id:int}/progress")]
     public async Task<ActionResult<SprintProgressResponse>> GetProgress(int id)
     {
-        try
-        {
-            var progress = await _sprintService.GetProgressAsync(id, UserId);
-            if (progress is null)
-                return NotFound(new { message = $"Sprint with id {id} not found." });
+        var progress = await _sprintService.GetProgressAsync(id, UserId);
+        if (progress is null)
+            return NotFound(new { message = $"Sprint with id {id} not found." });
 
-            return Ok(progress);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-        }
+        return Ok(progress);
     }
 }

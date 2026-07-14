@@ -1,4 +1,4 @@
-﻿using Application.DTOs.Workspace;
+using Application.DTOs.Workspace;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +8,7 @@ namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] 
+    [Authorize]
     public class WorkspacesController : ControllerBase
     {
         private readonly IWorkspaceService _workspaceService;
@@ -17,7 +17,6 @@ namespace API.Controllers
         {
             _workspaceService = workspaceService;
         }
-
 
         private string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
@@ -31,18 +30,11 @@ namespace API.Controllers
         [HttpGet("{id:int}")]
         public async Task<ActionResult<WorkspaceResponse>> GetById(int id)
         {
-            try
-            {
-                var workspace = await _workspaceService.GetByIdAsync(id, UserId);
-                if (workspace is null)
-                    return NotFound(new { message = $"Workspace with id {id} not found." });
+            var workspace = await _workspaceService.GetByIdAsync(id, UserId);
+            if (workspace is null)
+                return NotFound(new { message = $"Workspace with id {id} not found." });
 
-                return Ok(workspace);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-            }
+            return Ok(workspace);
         }
 
         [HttpPost]
@@ -51,15 +43,8 @@ namespace API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            try
-            {
-                var created = await _workspaceService.CreateAsync(request, UserId);
-                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(new { message = ex.Message });
-            }
+            var created = await _workspaceService.CreateAsync(request, UserId);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
         [HttpPut("{id:int}")]
@@ -68,39 +53,21 @@ namespace API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            try
-            {
-                var updated = await _workspaceService.UpdateAsync(id, request, UserId);
-                if (updated is null)
-                    return NotFound(new { message = $"Workspace with id {id} not found." });
+            var updated = await _workspaceService.UpdateAsync(id, request, UserId);
+            if (updated is null)
+                return NotFound(new { message = $"Workspace with id {id} not found." });
 
-                return Ok(updated);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(new { message = ex.Message });
-            }
+            return Ok(updated);
         }
 
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            try
-            {
-                var deleted = await _workspaceService.DeleteAsync(id, UserId);
-                if (!deleted)
-                    return NotFound(new { message = $"Workspace with id {id} not found." });
+            var deleted = await _workspaceService.DeleteAsync(id, UserId);
+            if (!deleted)
+                return NotFound(new { message = $"Workspace with id {id} not found." });
 
-                return NoContent();
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-            }
+            return NoContent();
         }
 
         [HttpPost("{workspaceId:int}/members")]
@@ -109,23 +76,8 @@ namespace API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            try
-            {
-                await _workspaceService.AddMemberAsync(workspaceId, request, UserId);
-                return Ok(new { message = "Member added or restored successfully." });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(new { message = ex.Message });
-            }
+            await _workspaceService.AddMemberAsync(workspaceId, request, UserId);
+            return Ok(new { message = "Member added or restored successfully." });
         }
 
         [HttpPut("{workspaceId:int}/members/{memberUserId}/role")]
@@ -134,45 +86,15 @@ namespace API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            try
-            {
-                await _workspaceService.UpdateMemberRoleAsync(workspaceId, memberUserId, request, UserId);
-                return Ok(new { message = "Member role updated successfully." });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(new { message = ex.Message });
-            }
+            await _workspaceService.UpdateMemberRoleAsync(workspaceId, memberUserId, request, UserId);
+            return Ok(new { message = "Member role updated successfully." });
         }
 
         [HttpDelete("{workspaceId:int}/members/{memberUserId}")]
         public async Task<IActionResult> RemoveMember(int workspaceId, string memberUserId)
         {
-            try
-            {
-                await _workspaceService.RemoveMemberAsync(workspaceId, memberUserId, UserId);
-                return Ok(new { message = "Member removed successfully." });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message }); 
-            }
+            await _workspaceService.RemoveMemberAsync(workspaceId, memberUserId, UserId);
+            return Ok(new { message = "Member removed successfully." });
         }
 
         [HttpPut("{workspaceId:int}/members/{memberUserId}")]
@@ -181,38 +103,15 @@ namespace API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            try
-            {
-                await _workspaceService.UpdateMemberProfileByAdminAsync(workspaceId, memberUserId, request, UserId);
-                return Ok(new { message = "Member profile updated successfully by Admin." });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
+            await _workspaceService.UpdateMemberProfileByAdminAsync(workspaceId, memberUserId, request, UserId);
+            return Ok(new { message = "Member profile updated successfully by Admin." });
         }
 
         [HttpGet("{workspaceId:int}/members/{memberUserId}")]
         public async Task<ActionResult<WorkspaceMemberDetailResponse>> GetWorkspaceMemberDetail(int workspaceId, string memberUserId)
         {
-            try
-            {
-                var memberDetail = await _workspaceService.GetWorkspaceMemberDetailAsync(workspaceId, memberUserId, UserId);
-
-                return Ok(memberDetail);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
+            var memberDetail = await _workspaceService.GetWorkspaceMemberDetailAsync(workspaceId, memberUserId, UserId);
+            return Ok(memberDetail);
         }
     }
 }

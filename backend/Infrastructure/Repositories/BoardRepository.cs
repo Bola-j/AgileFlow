@@ -89,6 +89,9 @@ namespace Infrastructure.Repositories
                     .ThenInclude(c => c.Tasks.Where(t => !t.IsDeleted && t.SprintId == sprintId))
                         .ThenInclude(t => t.UserTasks.Where(ut => !ut.IsDeleted))
                             .ThenInclude(ut => ut.AppUser)
+                .Include(b => b.BoardColumns.Where(c => !c.IsDeleted).OrderBy(c => c.Position))
+                    .ThenInclude(c => c.Tasks.Where(t => !t.IsDeleted && t.SprintId == sprintId))
+                        .ThenInclude(t => t.TaskDependents)
                 .FirstOrDefaultAsync(b => b.ProjectId == projectId);
         }
     }

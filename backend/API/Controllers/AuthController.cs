@@ -17,15 +17,8 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
     {
-        try
-        {
-            var response = await authService.RegisterAsync(request);
-            return CreatedAtAction(nameof(Register), response);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
+        var response = await authService.RegisterAsync(request);
+        return CreatedAtAction(nameof(Register), response);
     }
 
     /// <summary>Login with email + password. Returns access + refresh tokens.</summary>
@@ -35,15 +28,8 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
     {
-        try
-        {
-            var response = await authService.LoginAsync(request);
-            return Ok(response);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return Unauthorized(new { error = ex.Message });
-        }
+        var response = await authService.LoginAsync(request);
+        return Ok(response);
     }
 
     /// <summary>
@@ -56,15 +42,8 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Refresh([FromBody] RefreshRequestDto request)
     {
-        try
-        {
-            var response = await authService.RefreshAsync(request);
-            return Ok(response);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return Unauthorized(new { error = ex.Message });
-        }
+        var response = await authService.RefreshAsync(request);
+        return Ok(response);
     }
 
     /// <summary>Revoke the given refresh token, effectively logging the user out.</summary>

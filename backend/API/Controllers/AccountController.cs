@@ -36,17 +36,10 @@ public class AccountController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        try
-        {
-            var account = await _accountService.UpdateMeAsync(UserId, request);
-            if (account is null)
-                return NotFound(new { message = "Authenticated user was not found." });
+        var account = await _accountService.UpdateMeAsync(UserId, request);
+        if (account is null)
+            return NotFound(new { message = "Authenticated user was not found." });
 
-            return Ok(account);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { message = ex.Message });
-        }
+        return Ok(account);
     }
 }
