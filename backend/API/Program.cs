@@ -128,7 +128,7 @@ internal class Program
         // ── CORS (Vite dev server) ────────────────────────────────────────────────────
         builder.Services.AddCors(options =>
             options.AddPolicy("DevFrontend", policy =>
-                policy.WithOrigins("http://127.0.0.1:5500/frontend/AuthTest.html")
+                policy.WithOrigins("http://localhost:5173", "http://127.0.0.1:5173")
                       .AllowAnyHeader()
                       .AllowAnyMethod()));
 

@@ -1,0 +1,14 @@
+export const queryKeys = {
+  account: ["account"] as const,
+  workspaces: ["workspaces"] as const,
+  workspace: (id: number) => ["workspace", id] as const,
+  projects: (workspaceId: number) => ["projects", workspaceId] as const,
+  project: (id: number) => ["project", id] as const,
+  sprints: (projectId: number) => ["sprints", projectId] as const,
+  sprint: (id: number) => ["sprint", id] as const,
+  sprintProgress: (id: number) => ["sprint-progress", id] as const,
+  board: (projectId: number, sprintId: number) => ["board", projectId, sprintId] as const,
+  tasks: (sprintId: number) => ["tasks", sprintId] as const,
+  task: (id: number) => ["task", id] as const,
+  taskActivity: (id: number) => ["task-activity", id] as const,
+};

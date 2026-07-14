@@ -1,0 +1,13 @@
+export const routes = {
+  dashboard: "/",
+  login: "/login",
+  register: "/register",
+  workspaces: "/workspaces",
+  workspace: (workspaceId: number | string) => `/workspaces/${workspaceId}`,
+  project: (projectId: number | string) => `/projects/${projectId}`,
+  board: (projectId: number | string) => `/projects/${projectId}/board`,
+  sprint: (sprintId: number | string) => `/sprints/${sprintId}`,
+  tasks: "/tasks",
+  account: "/account",
+  settings: "/settings",
+};
