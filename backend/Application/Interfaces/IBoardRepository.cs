@@ -9,16 +9,15 @@ namespace Application.Interfaces
 {
     public interface IBoardRepository
     {
-        Task<IEnumerable<Board>> GetBoardsByProjectIdAsync(int projectId);
         Task<Board?> GetByIdAsync(int boardId);
+        Task<Board?> GetByProjectIdAsync(int projectId);
         Task AddAsync(Board board);
-        Task<bool> ProjectHasBoardAsync(int projectId);
         Task<BoardColumn?> GetColumnByIdAsync(int columnId);
         Task AddColumnAsync(BoardColumn column);
         Task UpdateColumnAsync(BoardColumn column);
         Task DeleteColumnAsync(BoardColumn column);
         Task<int> GetColumnsCountAsync(int boardId); 
         Task UpdateColumnsOrderAsync(List<BoardColumn> columns);
-        Task<Board?> GetBoardWithDetailsByIdAsync(int boardId);
+        Task<Board?> GetBoardWithDetailsByProjectIdAsync(int projectId);
     }
 }

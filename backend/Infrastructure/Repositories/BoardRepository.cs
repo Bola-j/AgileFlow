@@ -24,22 +24,16 @@ namespace Infrastructure.Repositories
             return await _context.Boards.FindAsync(id);
         }
 
-        public async Task<IEnumerable<Board>> GetBoardsByProjectIdAsync(int projectId)
+        public async Task<Board?> GetByProjectIdAsync(int projectId)
         {
             return await _context.Boards
-                .Where(b => b.ProjectId == projectId)
-                .ToListAsync();
+                .FirstOrDefaultAsync(b => b.ProjectId == projectId);
         }
 
         public async Task AddAsync(Board board)
         {
             await _context.Boards.AddAsync(board);
             await _context.SaveChangesAsync();
-        }
-
-        public async Task<bool> ProjectHasBoardAsync(int projectId)
-        {
-            return await _context.Boards.AnyAsync(b => b.ProjectId == projectId);
         }
 
         public async Task<BoardColumn?> GetColumnByIdAsync(int columnId)
@@ -82,14 +76,14 @@ namespace Infrastructure.Repositories
         }
 
 
-        public async Task<Board?> GetBoardWithDetailsByIdAsync(int boardId)
+        public async Task<Board?> GetBoardWithDetailsByProjectIdAsync(int projectId)
         {
             return await _context.Boards
                 .Include(b => b.BoardColumns.Where(c => !c.IsDeleted).OrderBy(c => c.Position))
                     .ThenInclude(c => c.Tasks.Where(t => !t.IsDeleted))
                         .ThenInclude(t => t.UserTasks.Where(ut => !ut.IsDeleted))
                             .ThenInclude(ut => ut.AppUser)
-                .FirstOrDefaultAsync(b => b.Id == boardId);
+                .FirstOrDefaultAsync(b => b.ProjectId == projectId);
         }
     }
 }

@@ -26,65 +26,36 @@ namespace Infrastructure.Services
             _authorizationService = authorizationService;
             _mapper = mapper;
         }
-        public async Task<CreateBoardResponse> CreateBoardAsync(
+
+        public async Task<GetBoardDetailsResponse?> GetBoardDetailsAsync(
             int projectId,
-            CreateBoardRequest request,
             string currentUserId)
         {
+            await _authorizationService.EnsureProjectMemberAsync(
+            projectId,
+            currentUserId);
+            var board = await _boardRepository.GetBoardWithDetailsByProjectIdAsync(projectId);
+
+            if (board is null)
+                return null;
+
+            return _mapper.Map<GetBoardDetailsResponse>(board);
+        }
+
+        public async Task AddColumnAsync(
+            int projectId,
+            AddColumnRequest request,
+            string currentUserId)
+        {
+
             await _authorizationService.EnsureProjectRoleAsync(
                 projectId,
                 currentUserId,
                 UserRole.Admin,
                 UserRole.TeamLead);
 
-            var board = new Board(request.Name, projectId);
-            await _boardRepository.AddAsync(board);
-
-            var todoColumn = new BoardColumn("To Do", board.Id);
-            todoColumn.UpdatePosition(0);
-
-            var inProgressColumn = new BoardColumn("In Progress", board.Id);
-            inProgressColumn.UpdatePosition(1);
-
-            var doneColumn = new BoardColumn("Done", board.Id);
-            doneColumn.UpdatePosition(2);
-
-            await _boardRepository.AddColumnAsync(todoColumn);
-            await _boardRepository.AddColumnAsync(inProgressColumn);
-            await _boardRepository.AddColumnAsync(doneColumn);
-
-            return _mapper.Map<CreateBoardResponse>(board);
-        }
-
-        public async Task<GetBoardDetailsResponse?> GetBoardDetailsAsync(
-            int boardId,
-            string currentUserId)
-        {
-            var board = await _boardRepository.GetBoardWithDetailsByIdAsync(boardId);
-
-            if (board is null)
-                return null;
-
-            await _authorizationService.EnsureProjectMemberAsync(
-                board.ProjectId,
-                currentUserId);
-
-            return _mapper.Map<GetBoardDetailsResponse>(board);
-        }
-
-        public async Task AddColumnAsync(
-            int boardId,
-            AddColumnRequest request,
-            string currentUserId)
-        {
-            var board = await _boardRepository.GetByIdAsync(boardId)
-                ?? throw new KeyNotFoundException($"Board with id {boardId} not found.");
-
-            await _authorizationService.EnsureProjectRoleAsync(
-                board.ProjectId,
-                currentUserId,
-                UserRole.Admin,
-                UserRole.TeamLead);
+            var board = await _boardRepository.GetByProjectIdAsync(projectId)
+                ?? throw new KeyNotFoundException($"Board for project {projectId} was not found.");
 
             int currentColumnsCount = await _boardRepository.GetColumnsCountAsync(board.Id);
 
@@ -128,18 +99,18 @@ namespace Infrastructure.Services
         }
 
         public async Task UpdateColumnsOrderAsync(
-            int boardId,
+            int projectId,
             UpdateColumnOrderRequest request,
             string currentUserId)
         {
-            var board = await _boardRepository.GetBoardWithDetailsByIdAsync(boardId)
-                ?? throw new KeyNotFoundException($"Board with id {boardId} not found.");
-
             await _authorizationService.EnsureProjectRoleAsync(
-                board.ProjectId,
+                projectId,
                 currentUserId,
                 UserRole.Admin,
                 UserRole.TeamLead);
+
+            var board = await _boardRepository.GetBoardWithDetailsByProjectIdAsync(projectId)
+                ?? throw new KeyNotFoundException($"Board for project {projectId} was not found.");
 
             for (int i = 0; i < request.OrderedColumnIds.Count; i++)
             {
@@ -147,23 +118,12 @@ namespace Infrastructure.Services
 
                 var column = board.BoardColumns.FirstOrDefault(c => c.Id == colId);
 
-                if (column is not null)
-                {
-                    column.UpdatePosition(i);
-                }
+                if (column is null)
+                    throw new InvalidOperationException($"Column with id {colId} does not belong to this board.");
+
+                column.UpdatePosition(i);
             }
             await _boardRepository.UpdateColumnsOrderAsync(board.BoardColumns.ToList());
-        }
-
-        public async Task<IEnumerable<BoardSummaryResponse>> GetProjectBoardsAsync(int projectId,string currentUserId)
-        {
-            await _authorizationService.EnsureProjectMemberAsync(
-                projectId,
-                currentUserId);
-
-            var boards = await _boardRepository.GetBoardsByProjectIdAsync(projectId);
-
-            return _mapper.Map<IEnumerable<BoardSummaryResponse>>(boards);
         }
     }
 }

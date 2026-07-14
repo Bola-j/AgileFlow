@@ -4,22 +4,22 @@ namespace AgileFlow.Domain.Entities
 {
     public class Board : BaseEntity
     {
-        public string Name { get; private set; } = string.Empty;
+        //public string Name { get; private set; } = string.Empty;
         public int ProjectId { get; private set; }
         public Project Project { get; private set; } = null!;
 
         private Board() { }
-        public Board(string name, int projectId)
+        public Board(int projectId)
         {
-            Name = name;
+            //Name = name;
             ProjectId = projectId;
         }
 
-        public void UpdateName(string name)
-        {
-            Name = name;
-            Update();
-        }
+        //public void UpdateName(string name)
+        //{
+        //    Name = name;
+        //    Update();
+        //}
         public ICollection<BoardColumn> BoardColumns { get; private set; } = new List<BoardColumn>();
     }
 

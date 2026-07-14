@@ -29,8 +29,8 @@ namespace AgileFlow.Infrastructure.Persistence.Configurations
             builder.HasQueryFilter(b => !b.IsDeleted);
 
             builder.HasOne(b => b.Project)
-                .WithMany(p => p.Boards)
-                .HasForeignKey(b => b.ProjectId)
+                .WithOne(p => p.Board)
+                .HasForeignKey<Board>(b => b.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasMany(b => b.BoardColumns)

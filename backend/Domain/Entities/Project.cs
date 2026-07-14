@@ -13,6 +13,7 @@ namespace AgileFlow.Domain.Entities
         public DateTime EndDate { get; private set; }
         public int WorkspaceId { get; private set; }
         public Workspace Workspace { get; private set; } = null!;
+        public Board Board { get; private set; } = null!;
 
         private Project() { }
 
@@ -50,7 +51,6 @@ namespace AgileFlow.Domain.Entities
             EndDate = endDate;
             Update();
         }
-        public ICollection<Board> Boards { get; private set; } = new List<Board>();
         public ICollection<Sprint> Sprints { get; private set; } = new List<Sprint>();
     }
 }

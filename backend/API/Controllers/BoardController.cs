@@ -20,46 +20,15 @@ namespace API.Controllers
         }
         private string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
-        [HttpPost("projects/{projectId:int}/boards")]
-        public async Task<ActionResult<CreateBoardResponse>> Create(int projectId,[FromBody] CreateBoardRequest request)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            try
-            {
-                var createdBoard = await _boardService.CreateBoardAsync(projectId, request, UserId);
-                return Ok(createdBoard);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-            }
-        }
-
-        [HttpGet("projects/{projectId:int}/boards")]
-        public async Task<ActionResult<IEnumerable<BoardSummaryResponse>>> GetProjectBoards(int projectId)
+        [HttpGet("projects/{projectId:int}/board")]
+        public async Task<ActionResult<GetBoardDetailsResponse>> GetBoardDetails(int projectId)
         {
             try
             {
-                var boards = await _boardService.GetProjectBoardsAsync(projectId, UserId);
-                return Ok(boards);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-            }
-        }
-
-        [HttpGet("boards/{boardId:int}")]
-        public async Task<ActionResult<GetBoardDetailsResponse>> GetBoardDetails(int boardId)
-        {
-            try
-            {
-                var boardDetails = await _boardService.GetBoardDetailsAsync(boardId, UserId);
+                var boardDetails = await _boardService.GetBoardDetailsAsync(projectId, UserId);
 
                 if (boardDetails is null)
-                    return NotFound(new { message = $"Board with id {boardId} not found." });
+                    return NotFound(new { message = $"Board for project {projectId} was not found." });
 
                 return Ok(boardDetails);
             }
@@ -69,16 +38,17 @@ namespace API.Controllers
             }
         }
 
-        [HttpPost("boards/{boardId:int}/columns")]
-        public async Task<IActionResult> AddColumn(int boardId,[FromBody] AddColumnRequest request)
+        [HttpPost("projects/{projectId:int}/board/columns")]
+        public async Task<IActionResult> AddColumn(int projectId, [FromBody] AddColumnRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             try
             {
-                await _boardService.AddColumnAsync(boardId, request, UserId);
-                return Ok(new { message = "Column added successfully." });
+                await _boardService.AddColumnAsync(projectId, request, UserId);
+                //return Ok(new { message = "Column added successfully." });
+                return StatusCode(StatusCodes.Status201Created);
             }
             catch (KeyNotFoundException ex)
             {
@@ -137,20 +107,20 @@ namespace API.Controllers
             }
         }
 
-        [HttpPut("boards/{boardId:int}/columns/order")]
-        public async Task<IActionResult> UpdateColumnsOrder(int boardId,[FromBody] UpdateColumnOrderRequest request)
+        [HttpPut("projects/{projectId:int}/board/columns/order")]
+        public async Task<IActionResult> UpdateColumnsOrder(int projectId, [FromBody] UpdateColumnOrderRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             try
             {
-                await _boardService.UpdateColumnsOrderAsync(boardId, request, UserId);
+                await _boardService.UpdateColumnsOrderAsync(projectId, request, UserId);
                 return Ok(new { message = "Columns order updated successfully." });
             }
-            catch (KeyNotFoundException ex)
+            catch (InvalidOperationException ex)
             {
-                return NotFound(new { message = ex.Message });
+                return BadRequest(new { message = ex.Message });
             }
             catch (UnauthorizedAccessException ex)
             {

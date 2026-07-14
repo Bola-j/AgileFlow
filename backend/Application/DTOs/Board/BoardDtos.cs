@@ -8,11 +8,6 @@ using System.Threading.Tasks;
 
 namespace Application.DTOs.Board
 {
-    public class CreateBoardRequest
-    {
-        [Required, MaxLength(100)]
-        public string Name { get; set; } = string.Empty;
-    }
     public class AddColumnRequest
     {
         [Required(ErrorMessage = "Column name cannot be empty.")]
@@ -30,12 +25,6 @@ namespace Application.DTOs.Board
         [Required]
         public List<int> OrderedColumnIds { get; set; } = new();
     }
-    public class CreateBoardResponse
-    {
-        public int BoardId { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public int ProjectId { get; set; }
-    }
     public class ColumnResponse
     {
         public int Id { get; set; }
@@ -45,17 +34,6 @@ namespace Application.DTOs.Board
     }
     public class GetBoardDetailsResponse
     {
-        public int BoardId { get; set; }
-        public int ProjectId { get; set; }
-        public string Name { get; set; } = string.Empty;
-
         public List<ColumnResponse> Columns { get; set; } = new();
     }
-
-    public class BoardSummaryResponse
-    {
-        public int BoardId { get; set; }
-        public string Name { get; set; } = string.Empty;
-    }
-
 }

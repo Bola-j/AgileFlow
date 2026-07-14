@@ -13,28 +13,16 @@ namespace Application.Mappings
     {
         public BoardProfile()
         {
-            CreateMap<Board, CreateBoardResponse>()
-                .ForMember(dest => dest.BoardId, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.ProjectId, opt => opt.MapFrom(src => src.ProjectId))
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name));
 
             CreateMap<Board, GetBoardDetailsResponse>()
-                .ForMember(dest => dest.BoardId, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.ProjectId, opt => opt.MapFrom(src => src.ProjectId))
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
                 .ForMember(dest => dest.Columns, opt => opt.MapFrom(src =>
-                    src.BoardColumns.Where(c => !c.IsDeleted).OrderBy(c => c.Position)));
+                    src.BoardColumns
+                        .Where(c => !c.IsDeleted)
+                        .OrderBy(c => c.Position)));
 
             CreateMap<BoardColumn, ColumnResponse>()
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
-                .ForMember(dest => dest.Position, opt => opt.MapFrom(src => src.Position))
                 .ForMember(dest => dest.Tasks, opt => opt.MapFrom(src =>
-                                    src.Tasks.Where(t => !t.IsDeleted)));
-
-            CreateMap<Board, BoardSummaryResponse>()
-                .ForMember(dest => dest.BoardId, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name));
+                    src.Tasks.Where(t => !t.IsDeleted)));
         }
     }
 }
