@@ -1,4 +1,4 @@
-﻿using Application.DTOs.Project;
+using Application.DTOs.Project;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,36 +23,18 @@ namespace API.Controllers
         [HttpGet("workspace/{workspaceId:int}")]
         public async Task<ActionResult<IEnumerable<ProjectResponse>>> GetByWorkspace(int workspaceId)
         {
-            try
-            {
-                var projects = await _projectService.GetByWorkspaceIdAsync(workspaceId, UserId);
-                return Ok(projects);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-            }
+            var projects = await _projectService.GetByWorkspaceIdAsync(workspaceId, UserId);
+            return Ok(projects);
         }
 
         [HttpGet("{id:int}")]
         public async Task<ActionResult<ProjectResponse>> GetById(int id)
         {
-            try
-            {
-                var project = await _projectService.GetByIdAsync(id, UserId);
-                if (project is null)
-                    return NotFound(new { message = $"Project with id {id} not found." });
+            var project = await _projectService.GetByIdAsync(id, UserId);
+            if (project is null)
+                return NotFound(new { message = $"Project with id {id} not found." });
 
-                return Ok(project);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-            }
+            return Ok(project);
         }
 
         [HttpPost]
@@ -61,23 +43,8 @@ namespace API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            try
-            {
-                var created = await _projectService.CreateAsync(request, UserId);
-                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(new { message = ex.Message });
-            }
+            var created = await _projectService.CreateAsync(request, UserId);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
         [HttpPut("{id:int}")]
@@ -86,39 +53,21 @@ namespace API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            try
-            {
-                var updated = await _projectService.UpdateAsync(id, request, UserId);
-                if (updated is null)
-                    return NotFound(new { message = $"Project with id {id} not found." });
+            var updated = await _projectService.UpdateAsync(id, request, UserId);
+            if (updated is null)
+                return NotFound(new { message = $"Project with id {id} not found." });
 
-                return Ok(updated);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(new { message = ex.Message });
-            }
+            return Ok(updated);
         }
 
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            try
-            {
-                var deleted = await _projectService.DeleteAsync(id, UserId);
-                if (!deleted)
-                    return NotFound(new { message = $"Project with id {id} not found." });
+            var deleted = await _projectService.DeleteAsync(id, UserId);
+            if (!deleted)
+                return NotFound(new { message = $"Project with id {id} not found." });
 
-                return NoContent();
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-            }
+            return NoContent();
         }
     }
 }

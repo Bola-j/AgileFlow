@@ -89,7 +89,7 @@ public sealed class AuthService(
     {
         ClaimsPrincipal principal;
         try { principal = tokenService.GetPrincipalFromExpiredToken(request.AccessToken); }
-        catch { throw new UnauthorizedAccessException("Invalid access token."); }
+        catch (Exception ex) { throw new UnauthorizedAccessException("Invalid access token.", ex); }
 
         var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? throw new UnauthorizedAccessException("Token missing subject claim.");

@@ -12,13 +12,9 @@ docs/           Project documentation
 
 ## Quick Start (Local)
 
-1. Run SQL Server (or use Docker Compose).
+1. Run SQL Server.
 2. Start backend: `dotnet run --project backend/API/API.csproj`
 3. Start frontend: `npm install && npm run dev` from `frontend/`
-
-## Docker
-
-`docker compose up --build`
 
 ## Notes
 

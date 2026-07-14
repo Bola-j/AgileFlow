@@ -24,6 +24,8 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
         builder.Property(r => r.CreatedAt).IsRequired();
         builder.Property(r => r.IsRevoked).IsRequired().HasDefaultValue(false);
 
+        builder.HasQueryFilter(r => !r.AppUser.IsDeleted);
+
         builder.HasOne(r => r.AppUser)
             .WithMany()                     // AppUser has no nav back to RefreshTokens
             .HasForeignKey(r => r.UserId)

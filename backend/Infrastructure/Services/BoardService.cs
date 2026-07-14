@@ -32,15 +32,77 @@ namespace Infrastructure.Services
             int sprintId,
             string currentUserId)
         {
-            await _authorizationService.EnsureProjectMemberAsync(
-            projectId,
-            currentUserId);
+            var workspaceId = await _authorizationService.GetWorkspaceIdForProjectAsync(projectId);
+            var membership = await _authorizationService.EnsureMemberAsync(workspaceId, currentUserId);
             var board = await _boardRepository.GetBoardWithDetailsByProjectIdAsync(projectId, sprintId);
 
             if (board is null)
                 return null;
 
-            return _mapper.Map<GetBoardDetailsResponse>(board);
+            var response = _mapper.Map<GetBoardDetailsResponse>(board);
+            if (membership.Role is UserRole.Admin or UserRole.TeamLead)
+                return response;
+
+            var visibilityReasons = BuildMemberVisibilityReasons(board, currentUserId);
+            foreach (var column in response.Columns)
+            {
+                column.Tasks = column.Tasks
+                    .Where(task => visibilityReasons.ContainsKey(task.Id))
+                    .ToList();
+
+                foreach (var task in column.Tasks)
+                {
+                    task.VisibilityReasons = visibilityReasons[task.Id];
+                }
+            }
+
+            return response;
+        }
+
+        private static Dictionary<int, List<string>> BuildMemberVisibilityReasons(Board board, string currentUserId)
+        {
+            var tasks = board.BoardColumns
+                .SelectMany(column => column.Tasks)
+                .Where(task => !task.IsDeleted)
+                .ToList();
+
+            var assignedTaskIds = tasks
+                .Where(task => task.UserTasks.Any(assignment =>
+                    !assignment.IsDeleted &&
+                    assignment.AppUserId == currentUserId))
+                .Select(task => task.Id)
+                .ToHashSet();
+
+            var reasons = new Dictionary<int, List<string>>();
+            foreach (var task in tasks)
+            {
+                if (assignedTaskIds.Contains(task.Id))
+                    AddVisibilityReason(reasons, task.Id, "AssignedToYou");
+
+                if (task.TaskDependents.Any(dependency => assignedTaskIds.Contains(dependency.DependedTaskId)))
+                    AddVisibilityReason(reasons, task.Id, "DependsOnYourTask");
+
+                if (tasks.Any(assignedTask =>
+                    assignedTaskIds.Contains(assignedTask.Id) &&
+                    assignedTask.TaskDependents.Any(dependency => dependency.DependedTaskId == task.Id)))
+                {
+                    AddVisibilityReason(reasons, task.Id, "MandatoryForYourTask");
+                }
+            }
+
+            return reasons;
+        }
+
+        private static void AddVisibilityReason(Dictionary<int, List<string>> reasons, int taskId, string reason)
+        {
+            if (!reasons.TryGetValue(taskId, out var taskReasons))
+            {
+                taskReasons = new List<string>();
+                reasons[taskId] = taskReasons;
+            }
+
+            if (!taskReasons.Contains(reason))
+                taskReasons.Add(reason);
         }
 
         public async Task AddColumnAsync(
@@ -59,6 +121,9 @@ namespace Infrastructure.Services
                 ?? throw new KeyNotFoundException($"Board for project {projectId} was not found.");
 
             int currentColumnsCount = await _boardRepository.GetColumnsCountAsync(board.Id);
+            
+            if(currentColumnsCount == 4)
+                throw new InvalidOperationException("A board can have at most 4 columns.");
 
             var newColumn = new BoardColumn(request.ColumnName, board.Id);
             newColumn.UpdatePosition(currentColumnsCount);

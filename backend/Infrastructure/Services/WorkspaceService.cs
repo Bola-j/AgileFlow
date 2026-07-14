@@ -10,6 +10,8 @@ namespace Infrastructure.Services
 {
     public class WorkspaceService : IWorkspaceService
     {
+        private static readonly UserRole[] WorkspaceManagerRoles = { UserRole.Admin, UserRole.TeamLead };
+
         private readonly IWorkspaceRepository _workspaceRepository;
         private readonly IUserWorkspaceRepository _userWorkspaceRepository;
         private readonly IWorkspaceAuthorizationService _authorizationService;
@@ -69,7 +71,7 @@ namespace Infrastructure.Services
             var workspace = await _workspaceRepository.GetByIdWithDetailsAsync(id);
             if (workspace is null) return null;
 
-            await _authorizationService.EnsureRoleAsync(id, userId, UserRole.Admin);
+            await _authorizationService.EnsureRoleAsync(id, userId, WorkspaceManagerRoles);
 
             if (await _workspaceRepository.NameExistsAsync(request.Name, userId, excludeId: id))
                 throw new InvalidOperationException($"You already have a workspace named '{request.Name}'.");
@@ -89,7 +91,7 @@ namespace Infrastructure.Services
             var workspace = await _workspaceRepository.GetByIdWithDetailsAsync(id);
             if (workspace is null) return false;
 
-            await _authorizationService.EnsureRoleAsync(id, userId, UserRole.Admin);
+            await _authorizationService.EnsureRoleAsync(id, userId, WorkspaceManagerRoles);
 
             await _workspaceRepository.DeleteAsync(workspace);
             return true;
@@ -97,7 +99,7 @@ namespace Infrastructure.Services
 
         public async Task AddMemberAsync(int workspaceId, AddWorkspaceMemberRequest request, string currentUserId)
         {
-            await _authorizationService.EnsureRoleAsync(workspaceId, currentUserId, UserRole.Admin);
+            await _authorizationService.EnsureRoleAsync(workspaceId, currentUserId, WorkspaceManagerRoles);
             var targetUser = await _userRepository.GetByIdAsync(request.UserId);
             if (targetUser is null)
                 throw new KeyNotFoundException($"User with id '{request.UserId}' does not exist in the system.");
@@ -120,18 +122,18 @@ namespace Infrastructure.Services
 
         public async Task UpdateMemberRoleAsync(int workspaceId, string memberUserId, UpdateWorkspaceMemberRoleRequest request, string currentUserId)
         {
-            await _authorizationService.EnsureRoleAsync(workspaceId, currentUserId, UserRole.Admin);
+            await _authorizationService.EnsureRoleAsync(workspaceId, currentUserId, WorkspaceManagerRoles);
 
             var membership = await _userWorkspaceRepository.GetMembershipAsync(workspaceId, memberUserId);
             if (membership is null || membership.IsDeleted)
                 throw new KeyNotFoundException("Member not found in this workspace.");
-            if (membership.Role == UserRole.Admin && request.Role != UserRole.Admin)
+            if (IsWorkspaceManager(membership.Role) && !IsWorkspaceManager(request.Role))
             {
                 var workspace = await _workspaceRepository.GetByIdWithDetailsAsync(workspaceId);
-                var activeAdminCount = workspace!.UserWorkspaces.Count(uw => uw.Role == UserRole.Admin && !uw.IsDeleted);
+                var activeManagerCount = workspace!.UserWorkspaces.Count(uw => IsWorkspaceManager(uw.Role) && !uw.IsDeleted);
 
-                if (activeAdminCount <= 1)
-                    throw new InvalidOperationException("Cannot demote the last Admin in this workspace.");
+                if (activeManagerCount <= 1)
+                    throw new InvalidOperationException("Cannot demote the last Admin or TeamLead in this workspace.");
             }
 
             membership.UpdateRole(request.Role);
@@ -140,19 +142,19 @@ namespace Infrastructure.Services
 
         public async Task RemoveMemberAsync(int workspaceId, string memberUserId, string currentUserId)
         {
-            await _authorizationService.EnsureRoleAsync(workspaceId, currentUserId, UserRole.Admin);
+            await _authorizationService.EnsureRoleAsync(workspaceId, currentUserId, WorkspaceManagerRoles);
             if (memberUserId == currentUserId)
                 throw new InvalidOperationException("You cannot remove yourself from the workspace.");
             var membership = await _userWorkspaceRepository.GetMembershipAsync(workspaceId, memberUserId);
             if (membership is null || membership.IsDeleted)
                 throw new KeyNotFoundException("Member not found in this workspace.");
-            if (membership.Role == UserRole.Admin)
+            if (IsWorkspaceManager(membership.Role))
             {
                 var workspace = await _workspaceRepository.GetByIdWithDetailsAsync(workspaceId);
-                var activeAdminCount = workspace!.UserWorkspaces.Count(uw => uw.Role == UserRole.Admin && !uw.IsDeleted);
+                var activeManagerCount = workspace!.UserWorkspaces.Count(uw => IsWorkspaceManager(uw.Role) && !uw.IsDeleted);
 
-                if (activeAdminCount <= 1)
-                    throw new InvalidOperationException("Cannot remove the last Admin from this workspace.");
+                if (activeManagerCount <= 1)
+                    throw new InvalidOperationException("Cannot remove the last Admin or TeamLead from this workspace.");
             }
             membership.Delete();
             await _userWorkspaceRepository.UpdateAsync(membership);
@@ -160,7 +162,7 @@ namespace Infrastructure.Services
 
         public async Task UpdateMemberProfileByAdminAsync(int workspaceId, string memberUserId, UpdateMemberProfileByAdminRequest request, string currentUserId)
         {
-            await _authorizationService.EnsureRoleAsync(workspaceId, currentUserId, UserRole.Admin);
+            await _authorizationService.EnsureRoleAsync(workspaceId, currentUserId, WorkspaceManagerRoles);
             var membership = await _userWorkspaceRepository.GetMembershipAsync(workspaceId, memberUserId);
             if (membership is null || membership.IsDeleted)
                 throw new KeyNotFoundException("The target user is not an active member of this workspace.");
@@ -191,11 +193,23 @@ namespace Infrastructure.Services
 
             if (request.Dob.HasValue)
                 user.SetDOB(request.Dob.Value);
+            else if (request.ClearDob)
+                user.ClearDOB();
 
             if (request.GithubUsername is not null)
-                user.SetGithubUsername(request.GithubUsername);
+            {
+                if (string.IsNullOrWhiteSpace(request.GithubUsername))
+                    user.SetGithubUsername(string.Empty);
+                else
+                    user.SetGithubUsername(request.GithubUsername);
+            }
 
             await _userRepository.UpdateAsync(user);
+        }
+
+        private static bool IsWorkspaceManager(UserRole role)
+        {
+            return role is UserRole.Admin or UserRole.TeamLead;
         }
 
         public async Task<WorkspaceMemberDetailResponse> GetWorkspaceMemberDetailAsync(int workspaceId, string memberUserId, string currentUserId)

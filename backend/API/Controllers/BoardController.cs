@@ -1,7 +1,6 @@
-﻿using Application.DTOs.Board;
+using Application.DTOs.Board;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -18,24 +17,17 @@ namespace API.Controllers
         {
             _boardService = boardService;
         }
+
         private string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
         [HttpGet("projects/{projectId:int}/board")]
-        public async Task<ActionResult<GetBoardDetailsResponse>> GetBoardDetails(int projectId,[FromQuery] int sprintId)
+        public async Task<ActionResult<GetBoardDetailsResponse>> GetBoardDetails(int projectId, [FromQuery] int sprintId)
         {
-            try
-            {
-                var boardDetails = await _boardService.GetBoardDetailsAsync(projectId, sprintId, UserId);
+            var boardDetails = await _boardService.GetBoardDetailsAsync(projectId, sprintId, UserId);
+            if (boardDetails is null)
+                return NotFound(new { message = $"Board for project {projectId} was not found." });
 
-                if (boardDetails is null)
-                    return NotFound(new { message = $"Board for project {projectId} was not found." });
-
-                return Ok(boardDetails);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-            }
+            return Ok(boardDetails);
         }
 
         [HttpPost("projects/{projectId:int}/board/columns")]
@@ -44,67 +36,25 @@ namespace API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            try
-            {
-                await _boardService.AddColumnAsync(projectId, request, UserId);
-                //return Ok(new { message = "Column added successfully." });
-                return StatusCode(StatusCodes.Status201Created);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-            }
+            await _boardService.AddColumnAsync(projectId, request, UserId);
+            return StatusCode(StatusCodes.Status201Created);
         }
 
         [HttpPut("columns/{columnId:int}")]
-        public async Task<IActionResult> UpdateColumnName(int columnId,[FromBody] UpdateColumnRequest request)
+        public async Task<IActionResult> UpdateColumnName(int columnId, [FromBody] UpdateColumnRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            try
-            {
-                await _boardService.UpdateColumnNameAsync(columnId, request, UserId);
-                return Ok(new { message = "Column name updated successfully." });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-            }
+            await _boardService.UpdateColumnNameAsync(columnId, request, UserId);
+            return Ok(new { message = "Column name updated successfully." });
         }
 
         [HttpDelete("columns/{columnId:int}")]
         public async Task<IActionResult> DeleteColumn(int columnId)
         {
-            try
-            {
-                await _boardService.DeleteColumnAsync(columnId, UserId);
-                return NoContent();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-            }
+            await _boardService.DeleteColumnAsync(columnId, UserId);
+            return NoContent();
         }
 
         [HttpPut("projects/{projectId:int}/board/columns/order")]
@@ -113,19 +63,8 @@ namespace API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            try
-            {
-                await _boardService.UpdateColumnsOrderAsync(projectId, request, UserId);
-                return Ok(new { message = "Columns order updated successfully." });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
-            }
+            await _boardService.UpdateColumnsOrderAsync(projectId, request, UserId);
+            return Ok(new { message = "Columns order updated successfully." });
         }
     }
 }

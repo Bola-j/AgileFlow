@@ -30,6 +30,11 @@ namespace AgileFlow.Infrastructure.Persistence.Configurations
             builder.Property(l => l.CreatedAt)
                 .IsRequired();
 
+            builder.HasQueryFilter(l =>
+                !l.IsDeleted &&
+                !l.AppUser.IsDeleted &&
+                !l.ProjectTask.IsDeleted);
+
             builder.HasOne(l => l.ProjectTask)
                 .WithMany(t => t.TaskActivityLogs)
                 .HasForeignKey(l => l.ProjectTaskId)
