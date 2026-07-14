@@ -54,6 +54,37 @@ public sealed class AuthService(
         return await IssueTokenPairAsync(user, role);
     }
 
+    //public async Task<AuthResponseDto> RefreshAsync(RefreshRequestDto request)
+    //{
+    //    ClaimsPrincipal principal;
+    //    try { principal = tokenService.GetPrincipalFromExpiredToken(request.AccessToken); }
+    //    catch { throw new UnauthorizedAccessException("Invalid access token."); }
+
+    //    var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier)
+    //        ?? throw new UnauthorizedAccessException("Token missing subject claim.");
+
+    //    // Find a valid, non-revoked refresh token for this user
+    //    var stored = await context.RefreshTokens
+    //        .Include(r => r.AppUser)
+    //        .FirstOrDefaultAsync(r =>
+    //            r.Token == request.RefreshToken &&
+    //            r.UserId == userId &&
+    //            !r.IsRevoked &&
+    //            r.ExpiresAt > DateTime.UtcNow);
+
+    //    if (stored is null)
+    //        throw new UnauthorizedAccessException("Refresh token is invalid or has expired.");
+
+    //    // Rotate: revoke the consumed token
+    //    stored.Revoke();
+
+    //    var role = await ResolveHighestRoleAsync(userId);
+    //    var response = await IssueTokenPairAsync(stored.AppUser, role);
+
+    //    await context.SaveChangesAsync();
+    //    return response;
+    //}
+
     public async Task<AuthResponseDto> RefreshAsync(RefreshRequestDto request)
     {
         ClaimsPrincipal principal;
@@ -63,9 +94,7 @@ public sealed class AuthService(
         var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? throw new UnauthorizedAccessException("Token missing subject claim.");
 
-        // Find a valid, non-revoked refresh token for this user
         var stored = await context.RefreshTokens
-            .Include(r => r.AppUser)
             .FirstOrDefaultAsync(r =>
                 r.Token == request.RefreshToken &&
                 r.UserId == userId &&
@@ -75,12 +104,12 @@ public sealed class AuthService(
         if (stored is null)
             throw new UnauthorizedAccessException("Refresh token is invalid or has expired.");
 
-        // Rotate: revoke the consumed token
+        var user = await userManager.FindByIdAsync(userId);
+        if (user is null || user.IsDeleted)
+            throw new UnauthorizedAccessException("User account is inactive or no longer exists.");
         stored.Revoke();
-
         var role = await ResolveHighestRoleAsync(userId);
-        var response = await IssueTokenPairAsync(stored.AppUser, role);
-
+        var response = await IssueTokenPairAsync(user, role);
         await context.SaveChangesAsync();
         return response;
     }

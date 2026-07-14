@@ -19,16 +19,19 @@ namespace Infrastructure.Services
         private readonly IProjectRepository _projectRepository;
         private readonly IWorkspaceRepository _workspaceRepository;
         private readonly IWorkspaceAuthorizationService _authorizationService;
+        private readonly IBoardRepository _boardRepository;
         private readonly IMapper _mapper;
 
         public ProjectService(
             IProjectRepository projectRepository,
             IWorkspaceRepository workspaceRepository,
+            IBoardRepository boardRepository,
             IWorkspaceAuthorizationService authorizationService,
             IMapper mapper)
         {
             _projectRepository = projectRepository;
             _workspaceRepository = workspaceRepository;
+            _boardRepository = boardRepository;
             _authorizationService = authorizationService;
             _mapper = mapper;
         }
@@ -80,6 +83,20 @@ namespace Infrastructure.Services
                 endDate: request.EndDate);
 
             var created = await _projectRepository.AddAsync(project);
+            var board = new Board(created.Id);
+            await _boardRepository.AddAsync(board);
+            var todoColumn = new BoardColumn("To Do", board.Id);
+            todoColumn.UpdatePosition(0);
+
+            var inProgressColumn = new BoardColumn("In Progress", board.Id);
+            inProgressColumn.UpdatePosition(1);
+
+            var doneColumn = new BoardColumn("Done", board.Id);
+            doneColumn.UpdatePosition(2);
+
+            await _boardRepository.AddColumnAsync(todoColumn);
+            await _boardRepository.AddColumnAsync(inProgressColumn);
+            await _boardRepository.AddColumnAsync(doneColumn);
             return _mapper.Map<ProjectResponse>(created);
         }
 

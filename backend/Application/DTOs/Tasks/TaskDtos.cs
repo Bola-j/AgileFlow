@@ -83,4 +83,29 @@ public class TaskDetailResponse : TaskSummaryResponse
     public string Description { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public List<TaskDependencyResponse> Dependencies { get; set; } = new();
+}
+
+public class AddTaskDependencyRequest
+{
+    [Required]
+    public int DependencyTaskId { get; set; }
+}
+
+public class TaskDependencyResponse
+{
+    public int DependencyTaskId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+}
+
+public class TaskActivityLogResponse
+{
+    public int Id { get; set; }
+    public string FieldChanged { get; set; } = string.Empty;
+    public string OldValue { get; set; } = string.Empty;
+    public string NewValue { get; set; } = string.Empty;
+    public string AppUserId { get; set; } = string.Empty;
+    public string AppUserName { get; set; } = string.Empty; 
+    public DateTime CreatedAt { get; set; }
 }

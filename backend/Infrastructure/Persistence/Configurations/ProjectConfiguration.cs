@@ -46,11 +46,6 @@ namespace AgileFlow.Infrastructure.Persistence.Configurations
                 .HasForeignKey(p => p.WorkspaceId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasMany(p => p.Boards)
-                .WithOne(b => b.Project)
-                .HasForeignKey(b => b.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
-
             builder.HasMany(p => p.Sprints)
                 .WithOne(s => s.Project)
                 .HasForeignKey(s => s.ProjectId)

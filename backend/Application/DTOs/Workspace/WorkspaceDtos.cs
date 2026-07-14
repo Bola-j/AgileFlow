@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Domain.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace Application.DTOs.Workspace
 {
@@ -22,7 +23,11 @@ namespace Application.DTOs.Workspace
         public string? Description { get; set; }
     }
 
-
+    public class AddWorkspaceMemberRequest
+    {
+        public string UserId { get; set; }
+        public UserRole Role { get; set; }
+    }
     public class WorkspaceMemberResponse
     {
         public string UserId { get; set; } = string.Empty;
@@ -62,5 +67,37 @@ namespace Application.DTOs.Workspace
         public DateTime CreatedAt { get; set; }
         public int ProjectCount { get; set; }
         public int MemberCount { get; set; }
+    }
+
+    public class UpdateWorkspaceMemberRoleRequest
+    {
+        public UserRole Role { get; set; }
+    }
+
+    public class UpdateMemberProfileByAdminRequest
+    {
+        [StringLength(50, ErrorMessage = "First name cannot exceed 50 characters.")]
+        public string? FirstName { get; set; }
+
+        [StringLength(50, ErrorMessage = "Last name cannot exceed 50 characters.")]
+        public string? LastName { get; set; }
+
+        [Phone(ErrorMessage = "Invalid phone number format.")]
+        public string? PhoneNumber { get; set; }
+        public string? ProfilePicture { get; set; }
+        public DateOnly? Dob { get; set; }
+        public string? GithubUsername { get; set; }
+    }
+    public class WorkspaceMemberDetailResponse
+    {
+        public string UserId { get; set; } = string.Empty;
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string? PhoneNumber { get; set; }
+        public string? ProfilePicture { get; set; }
+        public DateOnly? Dob { get; set; }
+        public string? GithubUsername { get; set; }
+        public string Role { get; set; } = string.Empty; 
     }
 }

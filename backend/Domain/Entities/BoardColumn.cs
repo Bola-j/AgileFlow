@@ -13,6 +13,7 @@ namespace AgileFlow.Domain.Entities
         public string Name { get; private set; } = string.Empty;
         public int BoardId { get; private set; }
         public Board Board { get; private set; } = null!;
+        public int Position { get; private set; }
 
         private BoardColumn() { }
 
@@ -20,11 +21,21 @@ namespace AgileFlow.Domain.Entities
         {
             Name = name;
             BoardId = boardId;
+            Position = 0;
         }
 
         public void UpdateName(string name)
         {
             Name = name;
+            Update();
+        }
+
+        public void UpdatePosition(int newPosition)
+        {
+            if (newPosition < 0)
+                throw new ArgumentException("Position cannot be negative.");
+
+            Position = newPosition;
             Update();
         }
 

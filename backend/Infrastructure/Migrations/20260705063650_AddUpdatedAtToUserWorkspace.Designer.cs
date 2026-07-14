@@ -4,6 +4,7 @@ using AgileFlow.Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AgileFlowDbContext))]
-    partial class AgileFlowDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260705063650_AddUpdatedAtToUserWorkspace")]
+    partial class AddUpdatedAtToUserWorkspace
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -141,6 +144,11 @@ namespace Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<int>("ProjectId")
                         .HasColumnType("int");
 
@@ -149,8 +157,7 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProjectId")
-                        .IsUnique();
+                    b.HasIndex("ProjectId");
 
                     b.ToTable("Boards");
                 });
@@ -181,9 +188,6 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("Position")
-                        .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -845,8 +849,8 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("AgileFlow.Domain.Entities.Board", b =>
                 {
                     b.HasOne("AgileFlow.Domain.Entities.Project", "Project")
-                        .WithOne("Board")
-                        .HasForeignKey("AgileFlow.Domain.Entities.Board", "ProjectId")
+                        .WithMany("Boards")
+                        .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1119,8 +1123,7 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("AgileFlow.Domain.Entities.Project", b =>
                 {
-                    b.Navigation("Board")
-                        .IsRequired();
+                    b.Navigation("Boards");
 
                     b.Navigation("Sprints");
                 });

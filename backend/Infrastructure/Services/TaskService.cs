@@ -87,13 +87,43 @@ public class TaskService : ITaskService
         if (request.DueDate == default)
             throw new InvalidOperationException("DueDate is required.");
 
-        task.UpdateTitle(request.Title);
-        task.UpdateDescription(request.Description ?? string.Empty);
-        task.UpdateStatus(request.Status);
-        task.UpdatePriority(request.Priority);
-        task.UpdateDueDate(request.DueDate);
+        var logs = new List<TaskActivityLog>();
+
+        if (task.Title != request.Title)
+        {
+            logs.Add(new TaskActivityLog("Title", id, userId, request.Title, task.Title));
+            task.UpdateTitle(request.Title);
+        }
+
+        if (task.Description != request.Description)
+        {
+            logs.Add(new TaskActivityLog("Description", id, userId, request.Description ?? string.Empty, task.Description));
+            task.UpdateDescription(request.Description ?? string.Empty);
+        }
+
+        if (task.Status != request.Status)
+        {
+            logs.Add(new TaskActivityLog("Status", id, userId, request.Status.ToString(), task.Status.ToString()));
+            task.UpdateStatus(request.Status);
+        }
+
+        if (task.Priority != request.Priority)
+        {
+            logs.Add(new TaskActivityLog("Priority", id, userId, request.Priority.ToString(), task.Priority.ToString()));
+            task.UpdatePriority(request.Priority);
+        }
+
+        if (task.DueDate != request.DueDate)
+        {
+            logs.Add(new TaskActivityLog("DueDate", id, userId, request.DueDate.ToString("yyyy-MM-dd"), task.DueDate.ToString("yyyy-MM-dd")));
+            task.UpdateDueDate(request.DueDate);
+        }
 
         await _taskRepository.UpdateAsync(task);
+        foreach (var log in logs)
+        {
+            await _taskRepository.AddActivityLogAsync(log);
+        }
 
         var updated = await _taskRepository.GetByIdAsync(id);
         return _mapper.Map<TaskDetailResponse>(updated!);
@@ -106,9 +136,14 @@ public class TaskService : ITaskService
 
         await EnsureCanProgressTaskAsync(id, userId);
 
-        task.UpdateStatus(request.Status);
-        await _taskRepository.UpdateAsync(task);
-
+        if (task.Status != request.Status)
+        {
+            var oldStatus = task.Status.ToString();
+            task.UpdateStatus(request.Status);
+            await _taskRepository.UpdateAsync(task);
+            var log = new TaskActivityLog("Status", id, userId, request.Status.ToString(), oldStatus);
+            await _taskRepository.AddActivityLogAsync(log);
+        }
         var updated = await _taskRepository.GetByIdAsync(id);
         return _mapper.Map<TaskDetailResponse>(updated!);
     }
@@ -126,8 +161,14 @@ public class TaskService : ITaskService
         if (column.Board.ProjectId != task.Sprint!.ProjectId)
             throw new InvalidOperationException("The selected column does not belong to the task project.");
 
-        task.UpdateColumn(request.ColumnId);
-        await _taskRepository.UpdateAsync(task);
+        if (task.ColumnId != request.ColumnId)
+        {
+            var oldColumnId = task.ColumnId.ToString();
+            task.UpdateColumn(request.ColumnId);
+            await _taskRepository.UpdateAsync(task);
+            var log = new TaskActivityLog("ColumnId", id, userId, request.ColumnId.ToString(), oldColumnId);
+            await _taskRepository.AddActivityLogAsync(log);
+        }
 
         var updated = await _taskRepository.GetByIdAsync(id);
         return _mapper.Map<TaskDetailResponse>(updated!);
@@ -200,6 +241,70 @@ public class TaskService : ITaskService
             assignment.Restore();
             await _taskRepository.UpdateAssignmentAsync(assignment);
         }
+    }
+
+    private async Task<bool> HasCircularDependencyAsync(int currentTaskId, int targetDependencyId)
+    {
+        if (currentTaskId == targetDependencyId)
+            return true;
+        var nextDependencies = await _taskRepository.GetDependedTaskIdsAsync(targetDependencyId);
+        foreach (var nextId in nextDependencies)
+        {
+            if (await HasCircularDependencyAsync(currentTaskId, nextId))
+                return true;
+        }
+        return false;
+    }
+
+    public async Task<bool> AddDependencyAsync(int taskId, int dependencyTaskId, string userId)
+    {
+        await _authorizationService.EnsureTaskRoleAsync(taskId, userId, UserRole.Admin, UserRole.TeamLead);
+        await _authorizationService.EnsureTaskMemberAsync(dependencyTaskId, userId);
+
+        if (taskId == dependencyTaskId)
+            throw new InvalidOperationException("A task cannot depend on itself.");
+
+        var task = await _taskRepository.GetByIdAsync(taskId)
+            ?? throw new KeyNotFoundException($"Task with id {taskId} not found.");
+
+        var dependencyTask = await _taskRepository.GetByIdAsync(dependencyTaskId)
+            ?? throw new KeyNotFoundException($"Dependency task with id {dependencyTaskId} not found.");
+
+        if (task.Sprint!.ProjectId != dependencyTask.Sprint!.ProjectId)
+            throw new InvalidOperationException("Both tasks must belong to the same project.");
+
+        var existingDependency = await _taskRepository.GetDependencyAsync(taskId, dependencyTaskId);
+        if (existingDependency is not null)
+            throw new InvalidOperationException("This dependency already exists.");
+
+        if (await HasCircularDependencyAsync(taskId, dependencyTaskId))
+            throw new InvalidOperationException("Circular dependency detected. This assignment is rejected.");
+
+        var dependency = new TaskDependent(taskId, dependencyTaskId);
+        await _taskRepository.AddDependencyAsync(dependency);
+
+        var log = new TaskActivityLog("DependencyAdded", taskId, userId, $"Task #{dependencyTaskId}", string.Empty);
+        await _taskRepository.AddActivityLogAsync(log);
+
+        return true;
+    }
+
+    public async Task<bool> RemoveDependencyAsync(int taskId, int dependencyTaskId, string userId)
+    {
+        await _authorizationService.EnsureTaskRoleAsync(taskId, userId, UserRole.Admin, UserRole.TeamLead);
+        var dependency = await _taskRepository.GetDependencyAsync(taskId, dependencyTaskId)
+            ?? throw new KeyNotFoundException("The specified dependency does not exist.");
+        await _taskRepository.RemoveDependencyAsync(dependency);
+        var log = new TaskActivityLog("DependencyRemoved", taskId, userId, string.Empty, $"Task #{dependencyTaskId}");
+        await _taskRepository.AddActivityLogAsync(log);
+        return true;
+    }
+
+    public async Task<IEnumerable<TaskActivityLogResponse>> GetActivityLogsAsync(int taskId, string userId)
+    {
+        await _authorizationService.EnsureTaskMemberAsync(taskId, userId);
+        var logs = await _taskRepository.GetActivityLogsByTaskIdAsync(taskId);
+        return _mapper.Map<IEnumerable<TaskActivityLogResponse>>(logs);
     }
 
 }

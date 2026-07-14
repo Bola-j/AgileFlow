@@ -60,6 +60,18 @@ namespace AgileFlow.Domain.Entities
             Github_Username = githubUsername;
             Update();
         }
+
+        public void SetPhoneNumber(string phoneNumber)
+        {
+            PhoneNumber = phoneNumber;
+            Update();
+        }
+
+        public void ClearPhoneNumber()
+        {
+            PhoneNumber = null;
+            Update();
+        }
         public void Delete()
         {
             IsDeleted = true;
