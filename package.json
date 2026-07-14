@@ -1,0 +1,11 @@
+{
+  "name": "agileflow-api-tests",
+  "private": true,
+  "scripts": {
+    "postman:test": "newman run postman/AgileFlow.postman_collection.json -e postman/AgileFlow.local.postman_environment.json",
+    "postman:test:verbose": "newman run postman/AgileFlow.postman_collection.json -e postman/AgileFlow.local.postman_environment.json --verbose"
+  },
+  "devDependencies": {
+    "newman": "^6.2.1"
+  }
+}

@@ -54,11 +54,10 @@ public sealed class TokenService(IConfiguration configuration) : ITokenService
         var parameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidateAudience = true,
+            ValidateAudience = false,
             ValidateLifetime = false,   // intentionally skip expiry
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwt["Issuer"],
-            ValidAudience = jwt["Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
                                            Encoding.UTF8.GetBytes(jwt["Key"]!))
         };

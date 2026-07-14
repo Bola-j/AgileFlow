@@ -23,10 +23,13 @@ namespace Infrastructure.Repositories
         public async Task<UserWorkspace?> GetMembershipAsync(int workspaceId, string userId)
         {
             return await _context.UserWorkspaces
+                .IgnoreQueryFilters()
                 .Include(uw => uw.AppUser)
                 .FirstOrDefaultAsync(uw =>
                     uw.WorkspaceId == workspaceId &&
-                    uw.AppUserId == userId);
+                    uw.AppUserId == userId &&
+                    !uw.Workspace.IsDeleted &&
+                    !uw.AppUser.IsDeleted);
         }
 
         public async Task AddAsync(UserWorkspace membership)

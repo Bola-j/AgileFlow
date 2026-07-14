@@ -15,6 +15,10 @@ namespace AgileFlow.Infrastructure.Persistence.Configurations
         {
             builder.HasKey(td => new { td.TaskId, td.DependedTaskId });
 
+            builder.HasQueryFilter(td =>
+                !td.Task.IsDeleted &&
+                !td.DependedTask.IsDeleted);
+
             builder.HasOne(td => td.Task)
                 .WithMany(t => t.TaskDependents)
                 .HasForeignKey(td => td.TaskId)

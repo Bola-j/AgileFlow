@@ -1,0 +1,3097 @@
+{
+  "info": {
+    "name": "AgileFlow Holistic API Suite",
+    "_postman_id": "f63f26c9-48fb-42f6-99e9-57b68d45cf7a",
+    "description": "End-to-end, non-destructive AgileFlow Web API suite covering auth, account, workspaces, members, projects, boards, sprints, tasks, dependencies, activity logs, role-based board visibility, and representative exception responses.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.environment.get('runId')) {",
+          "  const runId = Date.now().toString();",
+          "  const password = pm.environment.get('defaultPassword') || 'Admin123!';",
+          "  const start = new Date(Date.now() + 24 * 60 * 60 * 1000);",
+          "  const end = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);",
+          "  const laterEnd = new Date(Date.now() + 21 * 24 * 60 * 60 * 1000);",
+          "  pm.environment.set('runId', runId);",
+          "  pm.environment.set('adminEmail', `agileflow.admin.${runId}@example.test`);",
+          "  pm.environment.set('developerEmail', `agileflow.developer.${runId}@example.test`);",
+          "  pm.environment.set('teamLeadEmail', `agileflow.teamlead.${runId}@example.test`);",
+          "  pm.environment.set('outsiderEmail', `agileflow.outsider.${runId}@example.test`);",
+          "  pm.environment.set('password', password);",
+          "  pm.environment.set('workspaceName', `Postman Workspace ${runId}`);",
+          "  pm.environment.set('projectName', `Postman Project ${runId}`);",
+          "  pm.environment.set('teamLeadProjectName', `Postman TeamLead Project ${runId}`);",
+          "  pm.environment.set('deleteProjectName', `Postman Delete Project ${runId}`);",
+          "  pm.environment.set('startDate', start.toISOString());",
+          "  pm.environment.set('endDate', end.toISOString());",
+          "  pm.environment.set('laterEndDate', laterEnd.toISOString());",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "00 Health and Swagger",
+      "item": [
+        {
+          "name": "Swagger JSON is available",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/swagger/v1/swagger.json"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Swagger returns 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Swagger has paths', () => pm.expect(pm.response.json().paths).to.be.an('object'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 Auth",
+      "item": [
+        {
+          "name": "Register Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstName\":\"Postman\",\"lastName\":\"Admin\",\"email\":\"{{adminEmail}}\",\"password\":\"{{password}}\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/register"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Admin registered', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.environment.set('adminUserId', json.userId);",
+                  "pm.environment.set('adminAccessToken', json.accessToken);",
+                  "pm.environment.set('adminRefreshToken', json.refreshToken);",
+                  "pm.test('Admin token returned', () => pm.expect(json.accessToken).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register Developer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstName\":\"Postman\",\"lastName\":\"Developer\",\"email\":\"{{developerEmail}}\",\"password\":\"{{password}}\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/register"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Developer registered', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.environment.set('developerUserId', json.userId);",
+                  "pm.environment.set('developerAccessToken', json.accessToken);",
+                  "pm.environment.set('developerRefreshToken', json.refreshToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register TeamLead",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstName\":\"Postman\",\"lastName\":\"TeamLead\",\"email\":\"{{teamLeadEmail}}\",\"password\":\"{{password}}\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/register"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead registered', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.environment.set('teamLeadUserId', json.userId);",
+                  "pm.environment.set('teamLeadAccessToken', json.accessToken);",
+                  "pm.environment.set('teamLeadRefreshToken', json.refreshToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register Outsider",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstName\":\"Postman\",\"lastName\":\"Outsider\",\"email\":\"{{outsiderEmail}}\",\"password\":\"{{password}}\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/register"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Outsider registered', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.environment.set('outsiderUserId', json.userId);",
+                  "pm.environment.set('outsiderAccessToken', json.accessToken);",
+                  "pm.environment.set('outsiderRefreshToken', json.refreshToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Duplicate Admin Registration returns conflict",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstName\":\"Postman\",\"lastName\":\"Admin\",\"email\":\"{{adminEmail}}\",\"password\":\"{{password}}\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/register"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Duplicate registration is rejected', () => pm.response.to.have.status(409));",
+                  "pm.test('Conflict response has message', () => pm.expect(pm.response.json().message).to.include('already exists'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{adminEmail}}\",\"password\":\"{{password}}\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Admin login succeeds', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.environment.set('adminAccessToken', json.accessToken);",
+                  "pm.environment.set('adminRefreshToken', json.refreshToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Developer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{developerEmail}}\",\"password\":\"{{password}}\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Developer login succeeds', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.environment.set('developerAccessToken', json.accessToken);",
+                  "pm.environment.set('developerRefreshToken', json.refreshToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login TeamLead",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{teamLeadEmail}}\",\"password\":\"{{password}}\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead login succeeds', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.environment.set('teamLeadAccessToken', json.accessToken);",
+                  "pm.environment.set('teamLeadRefreshToken', json.refreshToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Admin Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"accessToken\":\"{{adminAccessToken}}\",\"refreshToken\":\"{{adminRefreshToken}}\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/refresh"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Admin refresh succeeds', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  pm.environment.set('adminAccessToken', json.accessToken);",
+                  "  pm.environment.set('adminRefreshToken', json.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalid Login is rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{adminEmail}}\",\"password\":\"Wrong123!\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Invalid login is rejected by current middleware mapping', () => pm.expect([401, 403]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 Account",
+      "item": [
+        {
+          "name": "Admin Get Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/account/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Get me succeeds', () => pm.response.to.have.status(200));",
+                  "pm.test('Current user is admin', () => pm.expect(pm.response.json().userId).to.eql(pm.environment.get('adminUserId')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Update Me",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstName\":\"PostmanAdminUpdated\",\"lastName\":\"Runner\",\"phoneNumber\":\"+15550000001\",\"profilePicture\":\"https://example.test/avatar.png\",\"dob\":\"1990-01-01\",\"githubUsername\":\"postman-admin-{{runId}}\"}"
+            },
+            "url": "{{baseUrl}}/api/account/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Update me succeeds', () => pm.response.to.have.status(200));",
+                  "pm.test('First name updated', () => pm.expect(pm.response.json().firstName).to.eql('PostmanAdminUpdated'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 Workspace and Members",
+      "item": [
+        {
+          "name": "Admin Create Workspace",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"{{workspaceName}}\",\"description\":\"Workspace created by Postman run {{runId}}\"}"
+            },
+            "url": "{{baseUrl}}/api/Workspaces"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Workspace created', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.environment.set('workspaceId', json.id);",
+                  "pm.test('Creator is workspace admin', () => pm.expect(json.members.some(m => m.userId === pm.environment.get('adminUserId') && m.role === 'Admin')).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Add Developer Member",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"userId\":\"{{developerUserId}}\",\"role\":0}"
+            },
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}/members"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Developer member added', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Add TeamLead Member",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"userId\":\"{{teamLeadUserId}}\",\"role\":1}"
+            },
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}/members"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead member added', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Duplicate Developer Membership returns conflict",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"userId\":\"{{developerUserId}}\",\"role\":0}"
+            },
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}/members"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Duplicate active member is conflict', () => pm.response.to.have.status(409));",
+                  "pm.test('Conflict uses message shape', () => pm.expect(pm.response.json()).to.have.property('message'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Developer Cannot Add Outsider Member",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{developerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"userId\":\"{{outsiderUserId}}\",\"role\":0}"
+            },
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}/members"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Developer cannot add member', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TeamLead Can Update Developer Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{teamLeadAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"role\":0}"
+            },
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}/members/{{developerUserId}}/role"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead can update member role', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Update Developer Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstName\":\"DevUpdated\",\"lastName\":\"ByAdmin\",\"phoneNumber\":\"+15550000002\",\"profilePicture\":\"https://example.test/dev.png\",\"dob\":\"1995-05-05\",\"githubUsername\":\"postman-dev-{{runId}}\"}"
+            },
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}/members/{{developerUserId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Admin updates member profile', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Clear Developer DOB",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"clearDob\":true}"
+            },
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}/members/{{developerUserId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Admin clears member DOB', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Developer Cannot Edit TeamLead Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{developerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstName\":\"Blocked\"}"
+            },
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}/members/{{teamLeadUserId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Developer cannot edit another member', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Remove Developer",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}/members/{{developerUserId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Developer removed', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Restores Developer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"userId\":\"{{developerUserId}}\",\"role\":0}"
+            },
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}/members"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Developer restored', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Workspace Details Include Restored Developer",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Workspace details succeeds', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Restored developer is present', () => pm.expect(json.members.some(m => m.userId === pm.environment.get('developerUserId'))).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 Projects",
+      "item": [
+        {
+          "name": "Admin Create Main Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"{{projectName}}\",\"description\":\"Main project for Postman run {{runId}}\",\"status\":0,\"startDate\":\"{{startDate}}\",\"endDate\":\"{{endDate}}\",\"workspaceId\":{{workspaceId}}}"
+            },
+            "url": "{{baseUrl}}/api/Projects"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Main project created', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('projectId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TeamLead Create Cross Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{teamLeadAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"{{teamLeadProjectName}}\",\"description\":\"Cross-project dependency target\",\"status\":0,\"startDate\":\"{{startDate}}\",\"endDate\":\"{{endDate}}\",\"workspaceId\":{{workspaceId}}}"
+            },
+            "url": "{{baseUrl}}/api/Projects"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead can create project', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('crossProjectId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Developer Cannot Create Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{developerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Blocked Developer Project {{runId}}\",\"description\":\"Blocked\",\"status\":0,\"startDate\":\"{{startDate}}\",\"endDate\":\"{{endDate}}\",\"workspaceId\":{{workspaceId}}}"
+            },
+            "url": "{{baseUrl}}/api/Projects"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Developer cannot create project', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Outsider Cannot Create Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{outsiderAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Blocked Outsider Project {{runId}}\",\"description\":\"Blocked\",\"status\":0,\"startDate\":\"{{startDate}}\",\"endDate\":\"{{endDate}}\",\"workspaceId\":{{workspaceId}}}"
+            },
+            "url": "{{baseUrl}}/api/Projects"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Outsider cannot create project', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalid Project Dates return conflict",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Invalid Dates {{runId}}\",\"description\":\"Invalid\",\"status\":0,\"startDate\":\"{{endDate}}\",\"endDate\":\"{{startDate}}\",\"workspaceId\":{{workspaceId}}}"
+            },
+            "url": "{{baseUrl}}/api/Projects"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Invalid project dates conflict', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Workspace Projects",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Projects/workspace/{{workspaceId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Project list succeeds', () => pm.response.to.have.status(200));",
+                  "pm.test('Main project is listed', () => pm.expect(pm.response.json().some(p => p.id === Number(pm.environment.get('projectId')))).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Main Project",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"{{projectName}} Updated\",\"description\":\"Updated project\",\"status\":0,\"endDate\":\"{{laterEndDate}}\"}"
+            },
+            "url": "{{baseUrl}}/api/Projects/{{projectId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Project updated', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Create Project To Delete",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"{{deleteProjectName}}\",\"description\":\"Project used to cover delete path\",\"status\":0,\"startDate\":\"{{startDate}}\",\"endDate\":\"{{endDate}}\",\"workspaceId\":{{workspaceId}}}"
+            },
+            "url": "{{baseUrl}}/api/Projects"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Delete-target project created', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('deleteProjectId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Delete Project",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Projects/{{deleteProjectId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Project delete returns 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 Sprints",
+      "item": [
+        {
+          "name": "Create Main Sprint",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Sprint {{runId}}\",\"goal\":\"Exercise full API\",\"startDate\":\"{{startDate}}\",\"endDate\":\"{{endDate}}\"}"
+            },
+            "url": "{{baseUrl}}/api/projects/{{projectId}}/sprints"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sprint created', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('sprintId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Main Sprint",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Sprint {{runId}} Updated\",\"goal\":\"Updated goal\",\"endDate\":\"{{laterEndDate}}\"}"
+            },
+            "url": "{{baseUrl}}/api/sprints/{{sprintId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sprint updated', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Start Main Sprint",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/sprints/{{sprintId}}/start"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sprint started', () => pm.response.to.have.status(200));",
+                  "pm.test('Sprint is active', () => pm.expect(pm.response.json().status).to.eql('Active'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Second Sprint",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Second Sprint {{runId}}\",\"goal\":\"Conflict check\",\"startDate\":\"{{startDate}}\",\"endDate\":\"{{endDate}}\"}"
+            },
+            "url": "{{baseUrl}}/api/projects/{{projectId}}/sprints"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Second sprint created', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('secondSprintId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject Second Active Sprint",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/sprints/{{secondSprintId}}/start"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Second active sprint is rejected', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Cross Project Sprint",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Cross Sprint {{runId}}\",\"goal\":\"Cross-project dependency rejection\",\"startDate\":\"{{startDate}}\",\"endDate\":\"{{endDate}}\"}"
+            },
+            "url": "{{baseUrl}}/api/projects/{{crossProjectId}}/sprints"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Cross project sprint created', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('crossSprintId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 Board",
+      "item": [
+        {
+          "name": "Get Board and Store Default Columns",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projects/{{projectId}}/board?sprintId={{sprintId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Board fetch succeeds', () => pm.response.to.have.status(200));",
+                  "const columns = pm.response.json().columns;",
+                  "pm.test('Default columns exist', () => pm.expect(columns.map(c => c.name)).to.include.members(['To Do', 'In Progress', 'Done']));",
+                  "pm.environment.set('todoColumnId', columns.find(c => c.name === 'To Do').id);",
+                  "pm.environment.set('inProgressColumnId', columns.find(c => c.name === 'In Progress').id);",
+                  "pm.environment.set('doneColumnId', columns.find(c => c.name === 'Done').id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Add Review Column",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"columnName\":\"Review {{runId}}\"}"
+            },
+            "url": "{{baseUrl}}/api/projects/{{projectId}}/board/columns"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Column added', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Board and Store Review Column",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projects/{{projectId}}/board?sprintId={{sprintId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Board refresh succeeds', () => pm.response.to.have.status(200));",
+                  "const column = pm.response.json().columns.find(c => c.name === `Review ${pm.environment.get('runId')}`);",
+                  "pm.test('Review column exists', () => pm.expect(column).to.exist);",
+                  "pm.environment.set('reviewColumnId', column.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TeamLead Rename Review Column",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{teamLeadAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"newName\":\"QA {{runId}}\"}"
+            },
+            "url": "{{baseUrl}}/api/columns/{{reviewColumnId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead can rename column', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Reorder Columns",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"orderedColumnIds\":[{{todoColumnId}},{{inProgressColumnId}},{{doneColumnId}},{{reviewColumnId}}]}"
+            },
+            "url": "{{baseUrl}}/api/projects/{{projectId}}/board/columns/order"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Columns reordered', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Developer Cannot Mutate Board",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{developerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"columnName\":\"Blocked {{runId}}\"}"
+            },
+            "url": "{{baseUrl}}/api/projects/{{projectId}}/board/columns"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Developer cannot add board column', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Delete Review Column",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/columns/{{reviewColumnId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Unused review column deleted', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Cross Project Board Columns",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projects/{{crossProjectId}}/board?sprintId={{crossSprintId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Cross board fetch succeeds', () => pm.response.to.have.status(200));",
+                  "const columns = pm.response.json().columns;",
+                  "pm.environment.set('crossTodoColumnId', columns.find(c => c.name === 'To Do').id);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 Tasks",
+      "item": [
+        {
+          "name": "Create Developer Task A",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\":\"Task A Assigned Developer {{runId}}\",\"description\":\"Developer-owned task\",\"status\":0,\"priority\":1,\"dueDate\":\"{{endDate}}\",\"columnId\":{{todoColumnId}},\"assigneeUserIds\":[\"{{developerUserId}}\"]}"
+            },
+            "url": "{{baseUrl}}/api/sprints/{{sprintId}}/tasks"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Task A created', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('taskAId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create TeamLead Task B",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\":\"Task B Depends On Developer {{runId}}\",\"description\":\"Depends on A later\",\"status\":0,\"priority\":2,\"dueDate\":\"{{endDate}}\",\"columnId\":{{todoColumnId}},\"assigneeUserIds\":[\"{{teamLeadUserId}}\"]}"
+            },
+            "url": "{{baseUrl}}/api/sprints/{{sprintId}}/tasks"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Task B created', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('taskBId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create TeamLead Task C",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\":\"Task C Mandatory For Developer {{runId}}\",\"description\":\"A depends on C later\",\"status\":0,\"priority\":1,\"dueDate\":\"{{endDate}}\",\"columnId\":{{todoColumnId}},\"assigneeUserIds\":[\"{{teamLeadUserId}}\"]}"
+            },
+            "url": "{{baseUrl}}/api/sprints/{{sprintId}}/tasks"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Task C created', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('taskCId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Unrelated TeamLead Task D",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\":\"Task D Hidden From Developer {{runId}}\",\"description\":\"Unrelated task\",\"status\":0,\"priority\":0,\"dueDate\":\"{{endDate}}\",\"columnId\":{{todoColumnId}},\"assigneeUserIds\":[\"{{teamLeadUserId}}\"]}"
+            },
+            "url": "{{baseUrl}}/api/sprints/{{sprintId}}/tasks"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Task D created', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('taskDId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Task A",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\":\"Task A Updated {{runId}}\",\"description\":\"Updated task A\",\"status\":1,\"priority\":2,\"dueDate\":\"{{laterEndDate}}\"}"
+            },
+            "url": "{{baseUrl}}/api/tasks/{{taskAId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Task A updated', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Move Task A",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{developerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"columnId\":{{inProgressColumnId}}}"
+            },
+            "url": "{{baseUrl}}/api/tasks/{{taskAId}}/move"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Assignee can move own task', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assign TeamLead To Task A",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"userId\":\"{{teamLeadUserId}}\"}"
+            },
+            "url": "{{baseUrl}}/api/tasks/{{taskAId}}/assignees"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead assigned to Task A', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unassign TeamLead From Task A",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks/{{taskAId}}/assignees/{{teamLeadUserId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead unassigned from Task A', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Cross Project Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\":\"Cross Project Task {{runId}}\",\"description\":\"Used for cross-project dependency rejection\",\"status\":0,\"priority\":1,\"dueDate\":\"{{endDate}}\",\"columnId\":{{crossTodoColumnId}},\"assigneeUserIds\":[\"{{teamLeadUserId}}\"]}"
+            },
+            "url": "{{baseUrl}}/api/sprints/{{crossSprintId}}/tasks"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Cross project task created', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('crossTaskId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Task To Delete",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\":\"Task To Delete {{runId}}\",\"description\":\"Delete path coverage\",\"status\":0,\"priority\":0,\"dueDate\":\"{{endDate}}\",\"columnId\":{{todoColumnId}},\"assigneeUserIds\":[\"{{developerUserId}}\"]}"
+            },
+            "url": "{{baseUrl}}/api/sprints/{{sprintId}}/tasks"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Delete-target task created', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('deleteTaskId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Delete Task",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks/{{deleteTaskId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Task delete returns 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "08 Dependencies and Activity",
+      "item": [
+        {
+          "name": "Task B Depends On Task A",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks/{{taskBId}}/dependencies/{{taskAId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Dependency B -> A added', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Task A Depends On Task C",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks/{{taskAId}}/dependencies/{{taskCId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Dependency A -> C added', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject Self Dependency",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks/{{taskAId}}/dependencies/{{taskAId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Self dependency rejected', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject Duplicate Dependency",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks/{{taskBId}}/dependencies/{{taskAId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Duplicate dependency rejected', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject Circular Dependency",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks/{{taskCId}}/dependencies/{{taskAId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Circular dependency rejected', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject Cross Project Dependency",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks/{{taskAId}}/dependencies/{{crossTaskId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Cross project dependency rejected', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Read Task A Activity Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks/{{taskAId}}/activity-logs"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Activity logs return 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Activity logs contain entries', () => pm.expect(pm.response.json().length).to.be.greaterThan(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Board Sees All Tasks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projects/{{projectId}}/board?sprintId={{sprintId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Admin board returns 200', () => pm.response.to.have.status(200));",
+                  "const tasks = pm.response.json().columns.flatMap(c => c.tasks);",
+                  "const ids = tasks.map(t => t.id);",
+                  "pm.test('Admin sees all scenario tasks', () => {",
+                  "  ['taskAId','taskBId','taskCId','taskDId'].forEach(k => pm.expect(ids).to.include(Number(pm.environment.get(k))));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Developer Board Sees Scoped Tasks With Reasons",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{developerAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projects/{{projectId}}/board?sprintId={{sprintId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Developer board returns 200', () => pm.response.to.have.status(200));",
+                  "const tasks = pm.response.json().columns.flatMap(c => c.tasks);",
+                  "const byId = Object.fromEntries(tasks.map(t => [t.id, t]));",
+                  "const taskA = Number(pm.environment.get('taskAId'));",
+                  "const taskB = Number(pm.environment.get('taskBId'));",
+                  "const taskC = Number(pm.environment.get('taskCId'));",
+                  "const taskD = Number(pm.environment.get('taskDId'));",
+                  "pm.test('Developer sees assigned and related tasks only', () => {",
+                  "  pm.expect(byId[taskA]).to.exist;",
+                  "  pm.expect(byId[taskB]).to.exist;",
+                  "  pm.expect(byId[taskC]).to.exist;",
+                  "  pm.expect(byId[taskD]).to.be.undefined;",
+                  "});",
+                  "pm.test('Visibility reasons are included', () => {",
+                  "  pm.expect(byId[taskA].visibilityReasons).to.include('AssignedToYou');",
+                  "  pm.expect(byId[taskB].visibilityReasons).to.include('DependsOnYourTask');",
+                  "  pm.expect(byId[taskC].visibilityReasons).to.include('MandatoryForYourTask');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TeamLead Board Sees All Tasks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{teamLeadAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projects/{{projectId}}/board?sprintId={{sprintId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead board returns 200', () => pm.response.to.have.status(200));",
+                  "const ids = pm.response.json().columns.flatMap(c => c.tasks).map(t => t.id);",
+                  "pm.test('TeamLead sees all scenario tasks', () => {",
+                  "  ['taskAId','taskBId','taskCId','taskDId'].forEach(k => pm.expect(ids).to.include(Number(pm.environment.get(k))));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remove Dependency B -> A",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks/{{taskBId}}/dependencies/{{taskAId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Dependency removed', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "09 Business Day Journey",
+      "description": "Realistic in-order business-day flow across workspace managers, developers, temporary members, sprint work, board movement, activity, and visibility.",
+      "item": [
+        {
+          "name": "Morning TeamLead Reviews Workspace Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{teamLeadAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead can read workspace details', () => pm.response.to.have.status(200));",
+                  "pm.test('Workspace includes active project and members', () => { const json = pm.response.json(); pm.expect(json.projects.length).to.be.greaterThan(0); pm.expect(json.members.some(m => m.userId === pm.environment.get('developerUserId'))).to.eql(true); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TeamLead Updates Workspace Daily Description",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{teamLeadAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"{{workspaceName}} Daily Ops\",\"description\":\"Updated by TeamLead during the business-day scenario {{runId}}\"}"
+            },
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead can update workspace', () => pm.response.to.have.status(200));",
+                  "pm.test('Workspace description updated', () => pm.expect(pm.response.json().description).to.include('business-day scenario'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Developer Reads Updated Workspace",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{developerAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Developer can read updated workspace', () => pm.response.to.have.status(200));",
+                  "pm.test('Developer sees TeamLead update', () => pm.expect(pm.response.json().name).to.include('Daily Ops'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TeamLead Adds Temporary Outsider Member",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{teamLeadAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"userId\":\"{{outsiderUserId}}\",\"role\":0}"
+            },
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}/members"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead can add temporary member', () => pm.response.to.have.status(200));",
+                  "pm.test('Add member response has message', () => pm.expect(pm.response.json()).to.have.property('message'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Temporary Member Can Read Workspace",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{outsiderAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Temporary member can read workspace', () => pm.response.to.have.status(200));",
+                  "pm.test('Temporary member sees own membership', () => pm.expect(pm.response.json().members.some(m => m.userId === pm.environment.get('outsiderUserId'))).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TeamLead Updates Temporary Member Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{teamLeadAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstName\":\"Temp\",\"lastName\":\"Contractor\",\"phoneNumber\":\"+15550000009\",\"profilePicture\":\"https://example.test/temp.png\",\"dob\":\"1992-02-02\",\"githubUsername\":\"postman-temp-{{runId}}\"}"
+            },
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}/members/{{outsiderUserId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead can update temporary member profile', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TeamLead Reads Temporary Member Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{teamLeadAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}/members/{{outsiderUserId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead can read member detail', () => pm.response.to.have.status(200));",
+                  "pm.test('Temporary member profile persisted', () => { const json = pm.response.json(); pm.expect(json.firstName).to.eql('Temp'); pm.expect(json.githubUsername).to.eql(`postman-temp-${pm.environment.get('runId')}`); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Developer Cannot Promote Temporary Member",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{developerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"role\":1}"
+            },
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}/members/{{outsiderUserId}}/role"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Developer cannot promote another member', () => pm.response.to.have.status(403));",
+                  "pm.test('Forbidden response uses message shape', () => pm.expect(pm.response.json()).to.have.property('message'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TeamLead Updates Project During Planning",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{teamLeadAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"{{projectName}} Daily Plan\",\"description\":\"Business-day project planning update {{runId}}\",\"status\":1,\"endDate\":\"{{laterEndDate}}\"}"
+            },
+            "url": "{{baseUrl}}/api/Projects/{{projectId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead can update project', () => pm.response.to.have.status(200));",
+                  "pm.test('Project update persisted', () => pm.expect(pm.response.json().name).to.include('Daily Plan'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Developer Lists Sprint Tasks For Standup",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{developerAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/sprints/{{sprintId}}/tasks"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Developer can list sprint tasks', () => pm.response.to.have.status(200));",
+                  "pm.test('Sprint task list includes developer task', () => pm.expect(pm.response.json().some(t => t.id === Number(pm.environment.get('taskAId')))).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Developer Pulls Own Task Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{developerAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks/{{taskAId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Developer can read own task detail', () => pm.response.to.have.status(200));",
+                  "pm.test('Task detail has assignees and dependencies', () => { const json = pm.response.json(); pm.expect(json.assignees).to.be.an('array'); pm.expect(json.dependencies).to.be.an('array'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TeamLead Creates Midday Bug Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{teamLeadAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\":\"Midday Bug {{runId}}\",\"description\":\"Urgent bug found during the business day\",\"status\":0,\"priority\":2,\"dueDate\":\"{{laterEndDate}}\",\"columnId\":{{todoColumnId}},\"assigneeUserIds\":[\"{{developerUserId}}\"]}"
+            },
+            "url": "{{baseUrl}}/api/sprints/{{sprintId}}/tasks"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead can create midday bug task', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('middayBugTaskId', pm.response.json().id);",
+                  "pm.test('Midday bug assigned to developer', () => pm.expect(pm.response.json().assignees.some(a => a.userId === pm.environment.get('developerUserId'))).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Developer Moves Midday Bug To In Progress",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{developerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"columnId\":{{inProgressColumnId}}}"
+            },
+            "url": "{{baseUrl}}/api/tasks/{{middayBugTaskId}}/move"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Developer can move assigned midday bug', () => pm.response.to.have.status(200));",
+                  "pm.test('Midday bug moved to In Progress', () => pm.expect(pm.response.json().columnId).to.eql(Number(pm.environment.get('inProgressColumnId'))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Developer Marks Midday Bug Done",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{developerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\":2}"
+            },
+            "url": "{{baseUrl}}/api/tasks/{{middayBugTaskId}}/status"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Developer can update assigned task status', () => pm.response.to.have.status(200));",
+                  "pm.test('Midday bug status is Done', () => pm.expect(pm.response.json().status).to.eql('Done'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Developer Moves Midday Bug To Done Column",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{developerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"columnId\":{{doneColumnId}}}"
+            },
+            "url": "{{baseUrl}}/api/tasks/{{middayBugTaskId}}/move"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Developer can move completed bug to Done column', () => pm.response.to.have.status(200));",
+                  "pm.test('Midday bug is in Done column', () => pm.expect(pm.response.json().columnId).to.eql(Number(pm.environment.get('doneColumnId'))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TeamLead Reviews Midday Bug Activity",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{teamLeadAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks/{{middayBugTaskId}}/activity-logs"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead can read midday bug activity', () => pm.response.to.have.status(200));",
+                  "pm.test('Midday bug has status or column activity', () => { const fields = pm.response.json().map(l => l.fieldChanged); pm.expect(fields.some(f => ['Status','Column'].includes(f))).to.eql(true); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Temporary Member Sees Scoped Board Only",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{outsiderAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projects/{{projectId}}/board?sprintId={{sprintId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Temporary member can read board', () => pm.response.to.have.status(200));",
+                  "pm.test('Temporary member sees no unrelated tasks', () => { const tasks = pm.response.json().columns.flatMap(c => c.tasks); pm.expect(tasks.length).to.eql(0); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TeamLead Assigns Temporary Member To Midday Bug",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{teamLeadAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"userId\":\"{{outsiderUserId}}\"}"
+            },
+            "url": "{{baseUrl}}/api/tasks/{{middayBugTaskId}}/assignees"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead can assign temporary member', () => pm.response.to.have.status(200));",
+                  "pm.test('Temporary member assigned to midday bug', () => pm.expect(pm.response.json().assignees.some(a => a.userId === pm.environment.get('outsiderUserId'))).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Temporary Member Board Shows Assigned Work",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{outsiderAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projects/{{projectId}}/board?sprintId={{sprintId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Temporary member can still read board', () => pm.response.to.have.status(200));",
+                  "pm.test('Temporary member sees newly assigned task with reason', () => { const tasks = pm.response.json().columns.flatMap(c => c.tasks); const task = tasks.find(t => t.id === Number(pm.environment.get('middayBugTaskId'))); pm.expect(task).to.exist; pm.expect(task.visibilityReasons).to.include('AssignedToYou'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TeamLead Unassigns Temporary Member From Midday Bug",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{teamLeadAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks/{{middayBugTaskId}}/assignees/{{outsiderUserId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead can unassign temporary member', () => pm.response.to.have.status(200));",
+                  "pm.test('Temporary member no longer assigned', () => pm.expect(pm.response.json().assignees.some(a => a.userId === pm.environment.get('outsiderUserId'))).to.eql(false));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TeamLead Removes Temporary Member End Of Day",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{teamLeadAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}/members/{{outsiderUserId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead can remove temporary member', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Removed Temporary Member Cannot Read Workspace",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{outsiderAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Removed temporary member cannot read workspace', () => pm.response.to.have.status(403));",
+                  "pm.test('Removed member failure uses message shape', () => pm.expect(pm.response.json()).to.have.property('message'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TeamLead Restores Temporary Member For Next Day",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{teamLeadAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"userId\":\"{{outsiderUserId}}\",\"role\":0}"
+            },
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}/members"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead can restore temporary member', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin End Of Day Board Review Sees All Work",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/projects/{{projectId}}/board?sprintId={{sprintId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Admin can review end-of-day board', () => pm.response.to.have.status(200));",
+                  "pm.test('Admin sees original and midday work', () => { const ids = pm.response.json().columns.flatMap(c => c.tasks).map(t => t.id); ['taskAId','taskBId','taskCId','taskDId','middayBugTaskId'].forEach(k => pm.expect(ids).to.include(Number(pm.environment.get(k)))); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sprint Progress Reflects Business Day Work",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{teamLeadAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/sprints/{{sprintId}}/progress"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead can review sprint progress', () => pm.response.to.have.status(200));",
+                  "pm.test('Progress includes completed midday bug', () => { const json = pm.response.json(); pm.expect(json.totalTasks).to.be.greaterThan(4); pm.expect(json.completedTasks).to.be.greaterThan(0); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "10 Negative and Security",
+      "item": [
+        {
+          "name": "Missing Task returns 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tasks/999999999"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Missing task returns 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Missing Workspace Member returns middleware 404 message",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}/members/00000000-0000-0000-0000-000000000404"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Missing member returns 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Response uses message shape', () => pm.expect(pm.response.json()).to.have.property('message'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unauthorized Request Without Token returns 401",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/account/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Missing JWT returns 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Model Validation returns 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"description\":\"Missing required name\"}"
+            },
+            "url": "{{baseUrl}}/api/Workspaces"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Invalid model returns 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Complete Main Sprint",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/sprints/{{sprintId}}/complete"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Active sprint completed', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject Completing Non-active Sprint",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/sprints/{{sprintId}}/complete"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Completing non-active sprint rejected', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sprint Progress returns totals",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/sprints/{{sprintId}}/progress"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Progress returns 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Progress has totalTasks', () => pm.expect(pm.response.json()).to.have.property('totalTasks'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout Outsider",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{outsiderAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"refreshToken\":\"{{outsiderRefreshToken}}\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/logout"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Logout returns 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
