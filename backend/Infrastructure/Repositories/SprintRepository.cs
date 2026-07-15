@@ -28,6 +28,7 @@ public class SprintRepository : ISprintRepository
     {
         return await _context.Sprints
             .Where(s => s.Id == id && !s.IsDeleted)
+            .Include(s => s.Project)
             .Include(s => s.Tasks.Where(t => !t.IsDeleted))
             .FirstOrDefaultAsync();
     }
@@ -39,6 +40,15 @@ public class SprintRepository : ISprintRepository
             s.Status == SprintStatus.Active &&
             !s.IsDeleted &&
             (excludeId == null || s.Id != excludeId));
+    }
+
+    public async Task<bool> HasTasksDueAfterAsync(int sprintId, DateTime endDate)
+    {
+        var end = endDate.Date;
+        return await _context.ProjectTasks.AnyAsync(t =>
+            t.SprintId == sprintId &&
+            !t.IsDeleted &&
+            t.DueDate.Date > end);
     }
 
     public async Task<Sprint> AddAsync(Sprint sprint)

@@ -68,7 +68,7 @@ namespace Infrastructure.Services
 
             await _authorizationService.EnsureRoleAsync(request.WorkspaceId, userId, UserRole.Admin, UserRole.TeamLead);
 
-            if (request.EndDate <= request.StartDate)
+            if (request.EndDate.Date <= request.StartDate.Date)
                 throw new InvalidOperationException("EndDate must be after StartDate.");
 
             if (await _projectRepository.NameExistsInWorkspaceAsync(request.Name, request.WorkspaceId))
@@ -107,8 +107,14 @@ namespace Infrastructure.Services
 
             await _authorizationService.EnsureRoleAsync(project.WorkspaceId, userId, UserRole.Admin, UserRole.TeamLead);
 
-            if (request.EndDate <= project.StartDate)
+            if (request.EndDate.Date <= project.StartDate.Date)
                 throw new InvalidOperationException("EndDate must be after the project's StartDate.");
+
+            if (await _projectRepository.HasSprintsEndingAfterAsync(id, request.EndDate))
+                throw new InvalidOperationException("Project EndDate cannot be before any sprint EndDate.");
+
+            if (await _projectRepository.HasTasksDueAfterAsync(id, request.EndDate))
+                throw new InvalidOperationException("Project EndDate cannot be before any task DueDate.");
 
             if (await _projectRepository.NameExistsInWorkspaceAsync(request.Name, project.WorkspaceId, excludeId: id))
                 throw new InvalidOperationException($"A project named '{request.Name}' already exists in this workspace.");

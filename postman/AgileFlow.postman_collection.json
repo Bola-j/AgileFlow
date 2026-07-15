@@ -640,38 +640,6 @@
           ]
         },
         {
-          "name": "Admin Update Developer Profile",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{adminAccessToken}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"firstName\":\"DevUpdated\",\"lastName\":\"ByAdmin\",\"phoneNumber\":\"+15550000002\",\"profilePicture\":\"https://example.test/dev.png\",\"dob\":\"1995-05-05\",\"githubUsername\":\"postman-dev-{{runId}}\"}"
-            },
-            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}/members/{{developerUserId}}"
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Admin updates member profile', () => pm.response.to.have.status(200));"
-                ]
-              }
-            }
-          ]
-        },
-        {
           "name": "Admin Clear Developer DOB",
           "request": {
             "method": "PUT",
@@ -2313,38 +2281,6 @@
           ]
         },
         {
-          "name": "TeamLead Updates Temporary Member Profile",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{teamLeadAccessToken}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"firstName\":\"Temp\",\"lastName\":\"Contractor\",\"phoneNumber\":\"+15550000009\",\"profilePicture\":\"https://example.test/temp.png\",\"dob\":\"1992-02-02\",\"githubUsername\":\"postman-temp-{{runId}}\"}"
-            },
-            "url": "{{baseUrl}}/api/Workspaces/{{workspaceId}}/members/{{outsiderUserId}}"
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('TeamLead can update temporary member profile', () => pm.response.to.have.status(200));"
-                ]
-              }
-            }
-          ]
-        },
-        {
           "name": "TeamLead Reads Temporary Member Detail",
           "request": {
             "method": "GET",
@@ -2363,7 +2299,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('TeamLead can read member detail', () => pm.response.to.have.status(200));",
-                  "pm.test('Temporary member profile persisted', () => { const json = pm.response.json(); pm.expect(json.firstName).to.eql('Temp'); pm.expect(json.githubUsername).to.eql(`postman-temp-${pm.environment.get('runId')}`); });"
+                  "pm.test('Temporary member detail is readable', () => { const json = pm.response.json(); pm.expect(json.email).to.be.a('string'); });"
                 ]
               }
             }
@@ -2555,7 +2491,7 @@
         {
           "name": "Developer Marks Midday Bug Done",
           "request": {
-            "method": "PATCH",
+            "method": "PUT",
             "header": [
               {
                 "key": "Authorization",

@@ -1,5 +1,7 @@
 export const queryKeys = {
   account: ["account"] as const,
+  dashboard: ["dashboard"] as const,
+  myTasks: ["my-tasks"] as const,
   workspaces: ["workspaces"] as const,
   workspace: (id: number) => ["workspace", id] as const,
   projects: (workspaceId: number) => ["projects", workspaceId] as const,

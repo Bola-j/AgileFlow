@@ -1,11 +1,15 @@
-import { BarChart3, Briefcase, KanbanSquare, LogOut, Menu, Moon, Search, Settings, Sun, User, Users } from "lucide-react";
+import { BarChart3, Briefcase, KanbanSquare, LogOut, Menu, Moon, Search, Settings, Sun, Users } from "lucide-react";
 import { useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { UserAvatar } from "@/components/shared/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/constants/routes";
 import { useTheme } from "@/app/providers";
+import { accountApi } from "@/features/account/api/accountApi";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { cn, initials } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { queryKeys } from "@/utils/queryKeys";
 
 const navItems = [
   { to: routes.dashboard, label: "Dashboard", icon: BarChart3 },
@@ -18,6 +22,7 @@ export function AppShell() {
   const [open, setOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const { auth, logout } = useAuth();
+  const account = useQuery({ queryKey: queryKeys.account, queryFn: accountApi.me });
 
   return (
     <div className="min-h-screen bg-background">
@@ -53,8 +58,13 @@ export function AppShell() {
             <Button size="icon" variant="ghost" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label="Toggle theme">
               {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
-            <Link to={routes.account} className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-sm font-semibold" aria-label="Account">
-              {auth?.email ? initials(auth.email) : <User className="h-4 w-4" />}
+            <Link to={routes.account} aria-label="Account">
+              <UserAvatar
+                className="h-9 w-9"
+                src={account.data?.profilePicture}
+                name={`${account.data?.firstName ?? ""} ${account.data?.lastName ?? ""}`.trim()}
+                email={account.data?.email ?? auth?.email}
+              />
             </Link>
             <Button size="icon" variant="ghost" onClick={() => void logout()} aria-label="Logout"><LogOut className="h-5 w-5" /></Button>
           </div>

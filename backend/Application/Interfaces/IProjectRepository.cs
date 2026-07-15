@@ -8,6 +8,8 @@ public interface IProjectRepository
     Task<Project?> GetByIdAsync(int id);
     Task<bool> NameExistsInWorkspaceAsync(string name, int workspaceId, int? excludeId = null);
     Task<bool> ExistsAsync(int id);
+    Task<bool> HasSprintsEndingAfterAsync(int projectId, DateTime endDate);
+    Task<bool> HasTasksDueAfterAsync(int projectId, DateTime endDate);
     Task<Project> AddAsync(Project project);
     Task UpdateAsync(Project project);
     Task DeleteAsync(Project project);

@@ -21,13 +21,13 @@ namespace Domain.Entities
         private TaskActivityLog() { }
 
         public TaskActivityLog(string fieldChanged, int projectTaskId, string appUserId,
-                               string newValue, string oldValue)
+                               string oldValue, string newValue)
         {
             FieldChanged = fieldChanged;
             ProjectTaskId = projectTaskId;
             AppUserId = appUserId;
-            NewValue = newValue;
             OldValue = oldValue;
+            NewValue = newValue;
         }
     }
 }

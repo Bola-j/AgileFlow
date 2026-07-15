@@ -161,6 +161,10 @@ namespace Infrastructure.Services
                 throw new InvalidOperationException("Column is already deleted.");
 
             await _authorizationService.EnsureProjectRoleAsync(column.Board.ProjectId, currentUserId, UserRole.Admin, UserRole.TeamLead);
+
+            if (await _boardRepository.ColumnHasActiveTasksAsync(columnId))
+                throw new InvalidOperationException("Move active tasks out of this column before deleting it.");
+
             await _boardRepository.DeleteColumnAsync(column);
         }
 

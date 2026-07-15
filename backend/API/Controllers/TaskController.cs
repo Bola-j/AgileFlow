@@ -60,10 +60,36 @@ public class TaskController : ControllerBase
         return Ok(updated);
     }
 
-    [HttpPatch("tasks/{id:int}/status")]
+    [HttpPut("tasks/{id:int}/status")]
     public async Task<ActionResult<TaskDetailResponse>> UpdateStatus(int id, [FromBody] UpdateTaskStatusRequest request)
     {
         var updated = await _taskService.UpdateStatusAsync(id, request, UserId);
+        if (updated is null)
+            return NotFound(new { message = $"Task with id {id} not found." });
+
+        return Ok(updated);
+    }
+
+    [HttpPost("tasks/{id:int}/submit")]
+    public async Task<ActionResult<TaskDetailResponse>> Submit(int id, [FromBody] SubmitTaskRequest request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var updated = await _taskService.SubmitAsync(id, request, UserId);
+        if (updated is null)
+            return NotFound(new { message = $"Task with id {id} not found." });
+
+        return Ok(updated);
+    }
+
+    [HttpPut("tasks/{id:int}/review")]
+    public async Task<ActionResult<TaskDetailResponse>> Review(int id, [FromBody] ReviewTaskRequest request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var updated = await _taskService.ReviewAsync(id, request, UserId);
         if (updated is null)
             return NotFound(new { message = $"Task with id {id} not found." });
 

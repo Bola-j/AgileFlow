@@ -2,7 +2,6 @@ import { apiClient } from "@/services/apiClient";
 import type {
   AddWorkspaceMemberRequest,
   CreateWorkspaceRequest,
-  UpdateMemberProfileByAdminRequest,
   UpdateWorkspaceMemberRoleRequest,
   UpdateWorkspaceRequest,
   WorkspaceMemberDetailResponse,
@@ -20,8 +19,6 @@ export const workspaceApi = {
   updateMemberRole: async (workspaceId: number, memberUserId: string, payload: UpdateWorkspaceMemberRoleRequest) =>
     apiClient.put(`/api/Workspaces/${workspaceId}/members/${memberUserId}/role`, payload),
   removeMember: async (workspaceId: number, memberEmail: string) => apiClient.delete(`/api/Workspaces/${workspaceId}/members/${encodeURIComponent(memberEmail)}`),
-  updateMemberProfile: async (workspaceId: number, memberUserId: string, payload: UpdateMemberProfileByAdminRequest) =>
-    apiClient.put(`/api/Workspaces/${workspaceId}/members/${memberUserId}`, payload),
   getMember: async (workspaceId: number, memberUserId: string) =>
     (await apiClient.get<WorkspaceMemberDetailResponse>(`/api/Workspaces/${workspaceId}/members/${memberUserId}`)).data,
 };

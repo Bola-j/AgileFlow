@@ -47,6 +47,23 @@ public class UpdateTaskStatusRequest
     public ProjectTaskStatus Status { get; set; }
 }
 
+public class SubmitTaskRequest
+{
+    [Required]
+    [MaxLength(100)]
+    public string CommitHash { get; set; } = string.Empty;
+}
+
+public class ReviewTaskRequest
+{
+    [Required]
+    public ProjectTaskApprovalStatus ApprovalStatus { get; set; }
+
+    [Required]
+    [MaxLength(2000)]
+    public string Comment { get; set; } = string.Empty;
+}
+
 public class MoveTaskRequest
 {
     [Required]
@@ -75,6 +92,7 @@ public class TaskSummaryResponse
     public DateTime DueDate { get; set; }
     public int SprintId { get; set; }
     public int ColumnId { get; set; }
+    public string? ApprovalStatus { get; set; }
     public List<TaskAssigneeResponse> Assignees { get; set; } = new();
     public List<string> VisibilityReasons { get; set; } = new();
 }
@@ -85,6 +103,8 @@ public class TaskDetailResponse : TaskSummaryResponse
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public List<TaskDependencyResponse> Dependencies { get; set; } = new();
+    public List<TaskCommitResponse> Commits { get; set; } = new();
+    public List<TaskCommentResponse> Comments { get; set; } = new();
 }
 
 public class AddTaskDependencyRequest
@@ -98,6 +118,7 @@ public class TaskDependencyResponse
     public int DependencyTaskId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
+    public string? ApprovalStatus { get; set; }
 }
 
 public class TaskActivityLogResponse
@@ -108,5 +129,24 @@ public class TaskActivityLogResponse
     public string NewValue { get; set; } = string.Empty;
     public string AppUserId { get; set; } = string.Empty;
     public string AppUserName { get; set; } = string.Empty; 
+    public DateTime CreatedAt { get; set; }
+}
+
+public class TaskCommitResponse
+{
+    public int Id { get; set; }
+    public string CommitHash { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string AppUserId { get; set; } = string.Empty;
+    public string AppUserName { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+}
+
+public class TaskCommentResponse
+{
+    public int Id { get; set; }
+    public string Content { get; set; } = string.Empty;
+    public string AppUserId { get; set; } = string.Empty;
+    public string AppUserName { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
 }

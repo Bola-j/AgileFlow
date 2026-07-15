@@ -85,12 +85,19 @@ public class TaskRepository : ITaskRepository
     private IQueryable<ProjectTask> TasksWithDetails()
     {
         return _context.ProjectTasks
+            .AsSplitQuery()
             .Include(t => t.UserTasks.Where(ut => !ut.IsDeleted))
                 .ThenInclude(ut => ut.AppUser)
             .Include(t => t.Sprint)
                 .ThenInclude(s => s!.Project)
             .Include(t => t.Column)
-                .ThenInclude(c => c.Board);
+                .ThenInclude(c => c.Board)
+            .Include(t => t.TaskDependents)
+                .ThenInclude(td => td.DependedTask)
+            .Include(t => t.Commits.Where(commit => !commit.IsDeleted))
+                .ThenInclude(commit => commit.AppUser)
+            .Include(t => t.Comments.Where(comment => !comment.IsDeleted))
+                .ThenInclude(comment => comment.AppUser);
     }
 
     public async Task<TaskDependent?> GetDependencyAsync(int taskId, int dependedTaskId)
@@ -132,5 +139,31 @@ public class TaskRepository : ITaskRepository
             .Where(l => l.ProjectTaskId == taskId)
             .OrderByDescending(l => l.Id)
             .ToListAsync();
+    }
+
+    public async Task<Commit?> GetLatestCommitAsync(int taskId)
+    {
+        return await _context.Commits
+            .Where(commit => commit.ProjectTaskId == taskId && !commit.IsDeleted)
+            .OrderByDescending(commit => commit.CreatedAt)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task AddCommitAsync(Commit commit)
+    {
+        await _context.Commits.AddAsync(commit);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task UpdateCommitAsync(Commit commit)
+    {
+        _context.Commits.Update(commit);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task AddCommentAsync(Comment comment)
+    {
+        await _context.Comments.AddAsync(comment);
+        await _context.SaveChangesAsync();
     }
 }

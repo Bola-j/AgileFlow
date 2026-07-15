@@ -43,7 +43,7 @@ export function ProjectDetailsPage() {
 
   return (
     <>
-      <PageHeader title={project.data.name} description={project.data.description || "Project details"} actions={<><Button variant="outline" onClick={() => setProjectOpen(true)}><Pencil className="h-4 w-4" />Edit</Button>{activeSprint ? <Button asChild><Link to={`${routes.board(projectId)}?sprintId=${activeSprint.id}`}><KanbanSquare className="h-4 w-4" />Board</Link></Button> : null}<Button onClick={() => setSprintOpen(true)}><Plus className="h-4 w-4" />Sprint</Button></>} />
+      <PageHeader title={project.data.name} description={project.data.description || "Project details"} actions={<><Button variant="outline" onClick={() => setProjectOpen(true)}><Pencil className="h-4 w-4" />Edit</Button>{activeSprint ? <Button asChild><Link to={routes.sprint(activeSprint.id)}><KanbanSquare className="h-4 w-4" />Active sprint</Link></Button> : null}<Button onClick={() => setSprintOpen(true)}><Plus className="h-4 w-4" />Sprint</Button></>} />
       <div className="mb-6 grid gap-4 md:grid-cols-3">
         <Card><CardHeader><CardTitle>Status</CardTitle></CardHeader><CardContent><Badge value={project.data.status} /></CardContent></Card>
         <Card><CardHeader><CardTitle>Timeline</CardTitle></CardHeader><CardContent className="flex items-center gap-2 text-sm"><Calendar className="h-4 w-4" />{formatDate(project.data.startDate)} - {formatDate(project.data.endDate)}</CardContent></Card>
@@ -56,8 +56,32 @@ export function ProjectDetailsPage() {
           {(sprints.data ?? []).map((sprint) => <Link key={sprint.id} to={routes.sprint(sprint.id)} className="flex flex-col gap-2 rounded-md border p-4 transition hover:bg-muted sm:flex-row sm:items-center sm:justify-between"><div><p className="font-medium">{sprint.name}</p><p className="text-sm text-muted-foreground">{sprint.goal}</p></div><div className="flex gap-2"><Badge value={sprint.status} /><Badge value={`${sprint.taskCount} tasks`} /></div></Link>)}
         </CardContent>
       </Card>
-      <Modal open={projectOpen} onOpenChange={setProjectOpen} title="Edit project"><form className="grid gap-4" onSubmit={projectForm.handleSubmit((values) => updateProject.mutate(values))}><Field label="Name"><Input {...projectForm.register("name")} /></Field><Field label="Description"><Textarea {...projectForm.register("description")} /></Field><div className="grid gap-4 sm:grid-cols-2"><Field label="Status"><SelectInput {...projectForm.register("status", { valueAsNumber: true })}><option value={ProjectStatus.InProgress}>In progress</option><option value={ProjectStatus.Completed}>Completed</option><option value={ProjectStatus.OnHold}>On hold</option><option value={ProjectStatus.Cancelled}>Cancelled</option></SelectInput></Field><Field label="End date"><Input type="date" {...projectForm.register("endDate")} /></Field></div><Button disabled={updateProject.isPending}>{updateProject.isPending ? "Saving..." : "Save"}</Button></form></Modal>
-      <Modal open={sprintOpen} onOpenChange={setSprintOpen} title="Create sprint"><form className="grid gap-4" onSubmit={sprintForm.handleSubmit((values) => createSprint.mutate(values))}><Field label="Name"><Input {...sprintForm.register("name")} /></Field><Field label="Goal"><Textarea {...sprintForm.register("goal")} /></Field><div className="grid gap-4 sm:grid-cols-2"><Field label="Start date"><Input type="date" {...sprintForm.register("startDate")} /></Field><Field label="End date"><Input type="date" {...sprintForm.register("endDate")} /></Field></div><Button disabled={createSprint.isPending}>{createSprint.isPending ? "Creating..." : "Create"}</Button></form></Modal>
+      <Modal open={projectOpen} onOpenChange={setProjectOpen} title="Edit project"><form className="grid gap-4" onSubmit={projectForm.handleSubmit((values) => {
+        if (new Date(values.endDate) <= new Date(project.data.startDate.slice(0, 10))) {
+          projectForm.setError("endDate", { message: "End date must be after the project start date." });
+          return;
+        }
+        updateProject.mutate(values);
+      })}><Field label="Name" error={projectForm.formState.errors.name?.message}><Input {...projectForm.register("name")} /></Field><Field label="Description" error={projectForm.formState.errors.description?.message}><Textarea {...projectForm.register("description")} /></Field><div className="grid gap-4 sm:grid-cols-2"><Field label="Status"><SelectInput {...projectForm.register("status", { valueAsNumber: true })}><option value={ProjectStatus.InProgress}>In progress</option><option value={ProjectStatus.Completed}>Completed</option><option value={ProjectStatus.OnHold}>On hold</option><option value={ProjectStatus.Cancelled}>Cancelled</option></SelectInput></Field><Field label="End date" error={projectForm.formState.errors.endDate?.message}><Input type="date" {...projectForm.register("endDate")} /></Field></div><Button disabled={updateProject.isPending}>{updateProject.isPending ? "Saving..." : "Save"}</Button></form></Modal>
+      <Modal open={sprintOpen} onOpenChange={setSprintOpen} title="Create sprint"><form className="grid gap-4" onSubmit={sprintForm.handleSubmit((values) => {
+        const projectStart = new Date(project.data.startDate.slice(0, 10));
+        const projectEnd = new Date(project.data.endDate.slice(0, 10));
+        const sprintStart = new Date(values.startDate);
+        const sprintEnd = new Date(values.endDate);
+        if (sprintStart < projectStart) {
+          sprintForm.setError("startDate", { message: "Sprint start date cannot be before the project start date." });
+          return;
+        }
+        if (sprintEnd <= sprintStart) {
+          sprintForm.setError("endDate", { message: "End date must be after start date." });
+          return;
+        }
+        if (sprintEnd > projectEnd) {
+          sprintForm.setError("endDate", { message: "Sprint end date cannot be after the project end date." });
+          return;
+        }
+        createSprint.mutate(values);
+      })}><Field label="Name" error={sprintForm.formState.errors.name?.message}><Input {...sprintForm.register("name")} /></Field><Field label="Goal" error={sprintForm.formState.errors.goal?.message}><Textarea {...sprintForm.register("goal")} /></Field><div className="grid gap-4 sm:grid-cols-2"><Field label="Start date" error={sprintForm.formState.errors.startDate?.message}><Input type="date" {...sprintForm.register("startDate")} /></Field><Field label="End date" error={sprintForm.formState.errors.endDate?.message}><Input type="date" {...sprintForm.register("endDate")} /></Field></div><Button disabled={createSprint.isPending}>{createSprint.isPending ? "Creating..." : "Create"}</Button></form></Modal>
     </>
   );
 }

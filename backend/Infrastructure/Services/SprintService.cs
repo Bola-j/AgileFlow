@@ -55,7 +55,7 @@ public class SprintService : ISprintService
 
         await _authorizationService.EnsureProjectRoleAsync(projectId, userId, UserRole.Admin, UserRole.TeamLead);
 
-        ValidateDates(request.StartDate, request.EndDate);
+        ValidateDates(request.StartDate, request.EndDate, project.StartDate, project.EndDate);
 
         var sprint = new Sprint(
             name: request.Name,
@@ -76,8 +76,13 @@ public class SprintService : ISprintService
 
         await _authorizationService.EnsureSprintRoleAsync(id, userId, UserRole.Admin, UserRole.TeamLead);
 
-        if (request.EndDate <= sprint.StartDate)
-            throw new InvalidOperationException("EndDate must be after StartDate.");
+        var project = await _projectRepository.GetByIdAsync(sprint.ProjectId)
+            ?? throw new KeyNotFoundException($"Project with id {sprint.ProjectId} not found.");
+
+        ValidateDates(sprint.StartDate, request.EndDate, project.StartDate, project.EndDate);
+
+        if (await _sprintRepository.HasTasksDueAfterAsync(id, request.EndDate))
+            throw new InvalidOperationException("Sprint EndDate cannot be before any task DueDate.");
 
         sprint.UpdateName(request.Name);
         sprint.UpdateGoal(request.Goal);
@@ -119,6 +124,15 @@ public class SprintService : ISprintService
         if (sprint.Status != SprintStatus.Active)
             throw new InvalidOperationException("Only active sprints can be completed.");
 
+        var incompleteTasks = sprint.Tasks
+            .Where(task => task.Status != ProjectTaskStatus.Done ||
+                           task.ApprovalStatus != ProjectTaskApprovalStatus.Approved)
+            .Select(task => task.Title)
+            .ToList();
+
+        if (incompleteTasks.Count > 0)
+            throw new InvalidOperationException($"Sprint can be completed only after all tasks are done and approved. Remaining tasks: {string.Join(", ", incompleteTasks)}.");
+
         sprint.UpdateStatus(SprintStatus.Completed);
         await _sprintRepository.UpdateAsync(sprint);
 
@@ -134,7 +148,9 @@ public class SprintService : ISprintService
         await _authorizationService.EnsureSprintMemberAsync(id, userId);
 
         var totalTasks = sprint.Tasks.Count;
-        var completedTasks = sprint.Tasks.Count(t => t.Status == ProjectTaskStatus.Done);
+        var completedTasks = sprint.Tasks.Count(t =>
+            t.Status == ProjectTaskStatus.Done &&
+            t.ApprovalStatus == ProjectTaskApprovalStatus.Approved);
         var percentage = totalTasks == 0
             ? 0m
             : Math.Round((decimal)completedTasks / totalTasks * 100m, 2);
@@ -148,9 +164,15 @@ public class SprintService : ISprintService
         };
     }
 
-    private static void ValidateDates(DateTime startDate, DateTime endDate)
+    private static void ValidateDates(DateTime startDate, DateTime endDate, DateTime projectStartDate, DateTime projectEndDate)
     {
-        if (endDate <= startDate)
+        if (startDate.Date < projectStartDate.Date)
+            throw new InvalidOperationException("Sprint StartDate cannot be before the project StartDate.");
+
+        if (endDate.Date <= startDate.Date)
             throw new InvalidOperationException("EndDate must be after StartDate.");
+
+        if (endDate.Date > projectEndDate.Date)
+            throw new InvalidOperationException("Sprint EndDate cannot be after the project EndDate.");
     }
 }

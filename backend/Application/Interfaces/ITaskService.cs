@@ -9,6 +9,8 @@ public interface ITaskService
     Task<TaskDetailResponse> CreateAsync(int sprintId, CreateTaskRequest request, string userId);
     Task<TaskDetailResponse?> UpdateAsync(int id, UpdateTaskRequest request, string userId);
     Task<TaskDetailResponse?> UpdateStatusAsync(int id, UpdateTaskStatusRequest request, string userId);
+    Task<TaskDetailResponse?> SubmitAsync(int id, SubmitTaskRequest request, string userId);
+    Task<TaskDetailResponse?> ReviewAsync(int id, ReviewTaskRequest request, string userId);
     Task<TaskDetailResponse?> MoveAsync(int id, MoveTaskRequest request, string userId);
     Task<TaskDetailResponse?> AssignUserAsync(int id, AssignTaskRequest request, string userId);
     Task<TaskDetailResponse?> UnassignUserAsync(int id, string assigneeUserId, string userId);

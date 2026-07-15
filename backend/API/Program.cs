@@ -124,6 +124,7 @@ internal class Program
         builder.Services.AddScoped<ISprintService, SprintService>();
         builder.Services.AddScoped<ITaskService, TaskService>();
         builder.Services.AddScoped<IBoardService, BoardService>();
+        builder.Services.AddScoped<IDashboardService, DashboardService>();
 
         // ── CORS (Vite dev server) ────────────────────────────────────────────────────
         builder.Services.AddCors(options =>
@@ -148,6 +149,8 @@ internal class Program
             app.UseCors("DevFrontend");
         }
 
+        EnsureUploadDirectories(app);
+        app.UseStaticFiles();
         app.UseHttpsRedirection();
         app.UseAuthentication();   // must be before UseAuthorization
         app.UseAuthorization();
@@ -166,5 +169,18 @@ internal class Program
         logger.LogInformation("Applying database migrations.");
         dbContext.Database.Migrate();
         logger.LogInformation("Database is up to date.");
+    }
+
+    private static void EnsureUploadDirectories(WebApplication app)
+    {
+        if (string.IsNullOrWhiteSpace(app.Environment.WebRootPath))
+        {
+            app.Environment.WebRootPath = Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+        }
+
+        Directory.CreateDirectory(Path.Combine(
+            app.Environment.WebRootPath,
+            "uploads",
+            "profile-pictures"));
     }
 }

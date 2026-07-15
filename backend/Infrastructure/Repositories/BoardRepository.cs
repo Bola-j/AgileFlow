@@ -57,13 +57,19 @@ namespace Infrastructure.Repositories
 
         public async Task DeleteColumnAsync(BoardColumn column)
         {
-            _context.BoardColumns.Remove(column);
+            column.Delete();
+            _context.BoardColumns.Update(column);
             await _context.SaveChangesAsync();
         }
 
         public async Task<int> GetColumnsCountAsync(int boardId)
         {
-            return await _context.BoardColumns.CountAsync(c => c.BoardId == boardId);
+            return await _context.BoardColumns.CountAsync(c => c.BoardId == boardId && !c.IsDeleted);
+        }
+
+        public async Task<bool> ColumnHasActiveTasksAsync(int columnId)
+        {
+            return await _context.ProjectTasks.AnyAsync(t => t.ColumnId == columnId && !t.IsDeleted);
         }
 
         public async Task UpdateColumnsOrderAsync(List<BoardColumn> columns)
@@ -85,6 +91,7 @@ namespace Infrastructure.Repositories
         public async Task<Board?> GetBoardWithDetailsByProjectIdAsync(int projectId,int sprintId)
         {
             return await _context.Boards
+                .AsSplitQuery()
                 .Include(b => b.BoardColumns.Where(c => !c.IsDeleted).OrderBy(c => c.Position))
                     .ThenInclude(c => c.Tasks.Where(t => !t.IsDeleted && t.SprintId == sprintId))
                         .ThenInclude(t => t.UserTasks.Where(ut => !ut.IsDeleted))
@@ -92,6 +99,7 @@ namespace Infrastructure.Repositories
                 .Include(b => b.BoardColumns.Where(c => !c.IsDeleted).OrderBy(c => c.Position))
                     .ThenInclude(c => c.Tasks.Where(t => !t.IsDeleted && t.SprintId == sprintId))
                         .ThenInclude(t => t.TaskDependents)
+                            .ThenInclude(td => td.DependedTask)
                 .FirstOrDefaultAsync(b => b.ProjectId == projectId);
         }
     }

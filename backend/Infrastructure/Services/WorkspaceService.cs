@@ -127,6 +127,8 @@ namespace Infrastructure.Services
             var membership = await _userWorkspaceRepository.GetMembershipAsync(workspaceId, memberUserId);
             if (membership is null || membership.IsDeleted)
                 throw new KeyNotFoundException("Member not found in this workspace.");
+            if (await IsWorkspaceCreatorAsync(workspaceId, memberUserId) && request.Role != UserRole.Admin)
+                throw new InvalidOperationException("The workspace creator must remain an Admin.");
             if (IsWorkspaceManager(membership.Role) && !IsWorkspaceManager(request.Role))
             {
                 var workspace = await _workspaceRepository.GetByIdWithDetailsAsync(workspaceId);
@@ -146,6 +148,8 @@ namespace Infrastructure.Services
             memberUserId = await ResolveUserIdAsync(memberUserId);
             if (memberUserId == currentUserId)
                 throw new InvalidOperationException("You cannot remove yourself from the workspace.");
+            if (await IsWorkspaceCreatorAsync(workspaceId, memberUserId))
+                throw new InvalidOperationException("The workspace creator cannot be removed.");
             var membership = await _userWorkspaceRepository.GetMembershipAsync(workspaceId, memberUserId);
             if (membership is null || membership.IsDeleted)
                 throw new KeyNotFoundException("Member not found in this workspace.");
@@ -161,56 +165,23 @@ namespace Infrastructure.Services
             await _userWorkspaceRepository.UpdateAsync(membership);
         }
 
-        public async Task UpdateMemberProfileByAdminAsync(int workspaceId, string memberUserId, UpdateMemberProfileByAdminRequest request, string currentUserId)
-        {
-            await _authorizationService.EnsureRoleAsync(workspaceId, currentUserId, WorkspaceManagerRoles);
-            var membership = await _userWorkspaceRepository.GetMembershipAsync(workspaceId, memberUserId);
-            if (membership is null || membership.IsDeleted)
-                throw new KeyNotFoundException("The target user is not an active member of this workspace.");
-            var user = await _userRepository.GetByIdAsync(memberUserId);
-            if (user is null || user.IsDeleted)
-                throw new KeyNotFoundException("User not found in the system.");
-            if (!string.IsNullOrWhiteSpace(request.FirstName))
-                user.UpdateFirstName(request.FirstName);
-
-            if (!string.IsNullOrWhiteSpace(request.LastName))
-                user.UpdateLastName(request.LastName);
-
-            if (request.PhoneNumber is not null)
-            {
-                if (string.IsNullOrWhiteSpace(request.PhoneNumber))
-                    user.ClearPhoneNumber(); 
-                else
-                    user.SetPhoneNumber(request.PhoneNumber); 
-            }
-
-            if (request.ProfilePicture is not null)
-            {
-                if (string.IsNullOrWhiteSpace(request.ProfilePicture))
-                    user.ClearProfilePicture();
-                else
-                    user.SetProfilePicture(request.ProfilePicture);
-            }
-
-            if (request.Dob.HasValue)
-                user.SetDOB(request.Dob.Value);
-            else if (request.ClearDob)
-                user.ClearDOB();
-
-            if (request.GithubUsername is not null)
-            {
-                if (string.IsNullOrWhiteSpace(request.GithubUsername))
-                    user.SetGithubUsername(string.Empty);
-                else
-                    user.SetGithubUsername(request.GithubUsername);
-            }
-
-            await _userRepository.UpdateAsync(user);
-        }
+        
 
         private static bool IsWorkspaceManager(UserRole role)
         {
             return role is UserRole.Admin or UserRole.TeamLead;
+        }
+
+        private async Task<bool> IsWorkspaceCreatorAsync(int workspaceId, string memberUserId)
+        {
+            var workspace = await _workspaceRepository.GetByIdWithDetailsAsync(workspaceId)
+                ?? throw new KeyNotFoundException("Workspace not found.");
+            var creatorUserId = workspace.UserWorkspaces
+                .OrderBy(uw => uw.JoinedAt)
+                .FirstOrDefault()
+                ?.AppUserId;
+
+            return creatorUserId == memberUserId;
         }
 
         private async Task<AgileFlow.Domain.Entities.AppUser?> ResolveUserAsync(string? email, string? userId)

@@ -107,4 +107,14 @@ public class AccountService : IAccountService
         await _userRepository.UpdateAsync(user);
         return _mapper.Map<AccountResponse>(user);
     }
+
+    public async Task<AccountResponse?> UpdateProfilePictureAsync(string userId, string profilePictureUrl)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user is null || user.IsDeleted) return null;
+
+        user.SetProfilePicture(profilePictureUrl);
+        await _userRepository.UpdateAsync(user);
+        return _mapper.Map<AccountResponse>(user);
+    }
 }

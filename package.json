@@ -2,10 +2,14 @@
   "name": "agileflow-api-tests",
   "private": true,
   "scripts": {
+    "e2e:setup": "playwright install chromium",
+    "e2e": "playwright test",
+    "e2e:editing": "playwright test --grep @editing",
     "postman:test": "newman run postman/AgileFlow.postman_collection.json -e postman/AgileFlow.local.postman_environment.json",
     "postman:test:verbose": "newman run postman/AgileFlow.postman_collection.json -e postman/AgileFlow.local.postman_environment.json --verbose"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
     "newman": "^6.2.1"
   }
 }

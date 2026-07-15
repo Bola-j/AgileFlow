@@ -4,24 +4,13 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/state";
-import { accountApi } from "@/features/account/api/accountApi";
-import { projectsApi } from "@/features/projects/api/projectsApi";
-import { sprintsApi } from "@/features/sprints/api/sprintsApi";
-import { tasksApi } from "@/features/tasks/api/tasksApi";
-import { workspaceApi } from "@/features/workspace/api/workspaceApi";
 import { formatDate } from "@/lib/utils";
-import type { ProjectResponse, SprintResponse, TaskSummaryResponse, WorkspaceSummaryResponse } from "@/types/api";
-
-interface DashboardData {
-  workspaces: WorkspaceSummaryResponse[];
-  projects: ProjectResponse[];
-  sprints: SprintResponse[];
-  tasks: TaskSummaryResponse[];
-  assignedTasks: TaskSummaryResponse[];
-}
+import { dashboardApi } from "@/services/dashboardApi";
+import type { TaskSummaryResponse } from "@/types/api";
+import { queryKeys } from "@/utils/queryKeys";
 
 export function DashboardPage() {
-  const query = useQuery({ queryKey: ["dashboard"], queryFn: loadDashboard });
+  const query = useQuery({ queryKey: queryKeys.dashboard, queryFn: dashboardApi.summary });
   if (query.isLoading) return <Skeleton className="h-[70vh]" />;
   if (query.isError || !query.data) return <ErrorState onRetry={() => void query.refetch()} />;
   const activeProjects = query.data.projects.filter((project) => project.status === "InProgress").length;
@@ -31,7 +20,7 @@ export function DashboardPage() {
 
   return (
     <>
-      <PageHeader title="Dashboard" description="Operational summary derived from available AgileFlow APIs." />
+      <PageHeader title="Dashboard" description="Operational summary from the dashboard aggregate API." />
       <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Metric title="Total projects" value={query.data.projects.length} />
         <Metric title="Active projects" value={activeProjects} />
@@ -49,14 +38,6 @@ export function DashboardPage() {
 
 function Metric({ title, value }: { title: string; value: number | string }) {
   return <Card><CardHeader><CardTitle className="text-sm text-muted-foreground">{title}</CardTitle></CardHeader><CardContent><p className="text-2xl font-semibold">{value}</p></CardContent></Card>;
-}
-
-async function loadDashboard(): Promise<DashboardData> {
-  const [account, workspaces] = await Promise.all([accountApi.me(), workspaceApi.list()]);
-  const projects = (await Promise.all(workspaces.map((workspace) => projectsApi.byWorkspace(workspace.id)))).flat();
-  const sprints = (await Promise.all(projects.map((project) => sprintsApi.byProject(project.id)))).flat();
-  const tasks = (await Promise.all(sprints.map((sprint) => tasksApi.bySprint(sprint.id)))).flat();
-  return { workspaces, projects, sprints, tasks, assignedTasks: tasks.filter((task) => task.assignees.some((assignee) => assignee.userId === account.userId)) };
 }
 
 function statusDistribution(tasks: TaskSummaryResponse[]) {

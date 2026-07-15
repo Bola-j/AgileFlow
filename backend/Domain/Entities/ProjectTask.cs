@@ -63,6 +63,12 @@ namespace AgileFlow.Domain.Entities
             ApprovalStatus = approvalStatus; 
             Update(); 
         }
+
+        public void ClearApprovalStatus()
+        {
+            ApprovalStatus = null;
+            Update();
+        }
         public void UpdateDueDate(DateTime dueDate)
         {
             DueDate = dueDate;

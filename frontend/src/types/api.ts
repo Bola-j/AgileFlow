@@ -2,18 +2,21 @@ export type ProjectStatusName = "InProgress" | "Completed" | "OnHold" | "Cancell
 export type SprintStatusName = "Planning" | "Active" | "Completed" | "Cancelled";
 export type ProjectTaskStatusName = "Todo" | "InProgress" | "Done" | "Cancelled";
 export type ProjectTaskPriorityName = "Low" | "Medium" | "High" | "Critical";
+export type ProjectTaskApprovalStatusName = "Pending" | "Approved" | "Rejected";
 export type UserRoleName = "Developer" | "TeamLead" | "Admin";
 
 export const ProjectStatus = { InProgress: 0, Completed: 1, OnHold: 2, Cancelled: 3 } as const;
 export const SprintStatus = { Planning: 0, Active: 1, Completed: 2, Cancelled: 3 } as const;
 export const ProjectTaskStatus = { Todo: 0, InProgress: 1, Done: 2, Cancelled: 3 } as const;
 export const ProjectTaskPriority = { Low: 0, Medium: 1, High: 2, Critical: 3 } as const;
+export const ProjectTaskApprovalStatus = { Pending: 0, Approved: 1, Rejected: 2 } as const;
 export const UserRole = { Developer: 0, TeamLead: 1, Admin: 2 } as const;
 
 export type ProjectStatusValue = (typeof ProjectStatus)[keyof typeof ProjectStatus];
 export type SprintStatusValue = (typeof SprintStatus)[keyof typeof SprintStatus];
 export type ProjectTaskStatusValue = (typeof ProjectTaskStatus)[keyof typeof ProjectTaskStatus];
 export type ProjectTaskPriorityValue = (typeof ProjectTaskPriority)[keyof typeof ProjectTaskPriority];
+export type ProjectTaskApprovalStatusValue = (typeof ProjectTaskApprovalStatus)[keyof typeof ProjectTaskApprovalStatus];
 export type UserRoleValue = (typeof UserRole)[keyof typeof UserRole];
 
 export interface RegisterRequestDto {
@@ -121,16 +124,6 @@ export interface UpdateWorkspaceMemberRoleRequest {
   role: UserRoleValue;
 }
 
-export interface UpdateMemberProfileByAdminRequest {
-  firstName?: string | null;
-  lastName?: string | null;
-  phoneNumber?: string | null;
-  profilePicture?: string | null;
-  dob?: string | null;
-  clearDob?: boolean;
-  githubUsername?: string | null;
-}
-
 export interface WorkspaceMemberDetailResponse {
   userId: string;
   firstName: string;
@@ -230,6 +223,7 @@ export interface TaskSummaryResponse {
   dueDate: string;
   sprintId: number;
   columnId: number;
+  approvalStatus?: ProjectTaskApprovalStatusName | null;
   assignees: TaskAssigneeResponse[];
   visibilityReasons: string[];
 }
@@ -267,6 +261,15 @@ export interface UpdateTaskStatusRequest {
   status: ProjectTaskStatusValue;
 }
 
+export interface SubmitTaskRequest {
+  commitHash: string;
+}
+
+export interface ReviewTaskRequest {
+  approvalStatus: ProjectTaskApprovalStatusValue;
+  comment: string;
+}
+
 export interface MoveTaskRequest {
   columnId: number;
 }
@@ -279,6 +282,7 @@ export interface TaskDependencyResponse {
   dependencyTaskId: number;
   title: string;
   status: string;
+  approvalStatus?: ProjectTaskApprovalStatusName | null;
 }
 
 export interface TaskDetailResponse extends TaskSummaryResponse {
@@ -286,6 +290,8 @@ export interface TaskDetailResponse extends TaskSummaryResponse {
   createdAt: string;
   updatedAt?: string | null;
   dependencies: TaskDependencyResponse[];
+  commits: TaskCommitResponse[];
+  comments: TaskCommentResponse[];
 }
 
 export interface TaskActivityLogResponse {
@@ -296,4 +302,37 @@ export interface TaskActivityLogResponse {
   appUserId: string;
   appUserName: string;
   createdAt: string;
+}
+
+export interface TaskCommitResponse {
+  id: number;
+  commitHash: string;
+  status: string;
+  appUserId: string;
+  appUserName: string;
+  createdAt: string;
+}
+
+export interface TaskCommentResponse {
+  id: number;
+  content: string;
+  appUserId: string;
+  appUserName: string;
+  createdAt: string;
+}
+
+export interface DashboardSummaryResponse {
+  workspaces: WorkspaceSummaryResponse[];
+  projects: ProjectResponse[];
+  sprints: SprintResponse[];
+  tasks: TaskSummaryResponse[];
+  assignedTasks: TaskSummaryResponse[];
+}
+
+export interface MyTaskResponse extends TaskSummaryResponse {
+  workspaceId: number;
+  workspaceName: string;
+  projectName: string;
+  sprintName: string;
+  workspaceMembers: WorkspaceMemberResponse[];
 }

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { SearchInput } from "@/components/shared/SearchInput";
+import { UserAvatar } from "@/components/shared/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmDialog, Modal } from "@/components/ui/dialog";
@@ -41,6 +42,10 @@ export function WorkspaceDetailsPage() {
   const removeMember = useMutation({ mutationFn: (email: string) => workspaceApi.removeMember(workspaceId, email), onSuccess: async () => { await invalidate(); setRemoveMemberEmail(null); toast.success("Member removed."); }, onError: (error) => toast.error(getErrorMessage(error)) });
 
   const members = useMemo(() => (workspace.data?.members ?? []).filter((member) => `${member.fullName} ${member.email} ${member.role}`.toLowerCase().includes(memberSearch.toLowerCase())), [memberSearch, workspace.data?.members]);
+  const creatorUserId = useMemo(
+    () => [...(workspace.data?.members ?? [])].sort((first, second) => new Date(first.joinedAt).getTime() - new Date(second.joinedAt).getTime())[0]?.userId,
+    [workspace.data?.members],
+  );
 
   if (workspace.isLoading) return <Skeleton className="h-96" />;
   if (workspace.isError || !workspace.data) return <ErrorState onRetry={() => void workspace.refetch()} />;
@@ -59,9 +64,9 @@ export function WorkspaceDetailsPage() {
                 <Table><TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Email</TableHead><TableHead>Role</TableHead><TableHead /></TableRow></TableHeader><tbody>
                   {members.map((member) => (
                     <TableRow key={member.userId}>
-                      <TableCell>{member.fullName}</TableCell><TableCell>{member.email}</TableCell>
-                      <TableCell><SelectInput value={String(roleValue(member.role))} onChange={(event) => updateRole.mutate({ userId: member.userId, role: Number(event.target.value) as 0 | 1 | 2 })}><option value={UserRole.Developer}>Developer</option><option value={UserRole.TeamLead}>Team Lead</option><option value={UserRole.Admin}>Admin</option></SelectInput></TableCell>
-                      <TableCell className="text-right"><Button size="icon" variant="ghost" onClick={() => setRemoveMemberEmail(member.email)}><UserMinus className="h-4 w-4" /></Button></TableCell>
+                      <TableCell><div className="flex items-center gap-3"><UserAvatar className="h-9 w-9" src={member.profilePicture} name={member.fullName} email={member.email} /><span>{member.fullName || member.email}</span></div></TableCell><TableCell>{member.email}</TableCell>
+                      <TableCell><SelectInput disabled={member.userId === creatorUserId} value={String(member.userId === creatorUserId ? UserRole.Admin : roleValue(member.role))} onChange={(event) => updateRole.mutate({ userId: member.userId, role: Number(event.target.value) as 0 | 1 | 2 })}><option value={UserRole.Developer}>Developer</option><option value={UserRole.TeamLead}>Team Lead</option><option value={UserRole.Admin}>Admin</option></SelectInput></TableCell>
+                      <TableCell className="text-right"><Button size="icon" variant="ghost" disabled={member.userId === creatorUserId} onClick={() => setRemoveMemberEmail(member.email)}><UserMinus className="h-4 w-4" /></Button></TableCell>
                     </TableRow>
                   ))}
                 </tbody></Table>

@@ -97,15 +97,7 @@ namespace API.Controllers
             return Ok(new { message = "Member removed successfully." });
         }
 
-        [HttpPut("{workspaceId:int}/members/{memberUserId}")]
-        public async Task<IActionResult> UpdateMemberProfileByAdmin(int workspaceId, string memberUserId, [FromBody] UpdateMemberProfileByAdminRequest request)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            await _workspaceService.UpdateMemberProfileByAdminAsync(workspaceId, memberUserId, request, UserId);
-            return Ok(new { message = "Member profile updated successfully by Admin." });
-        }
+        
 
         [HttpGet("{workspaceId:int}/members/{memberUserId}")]
         public async Task<ActionResult<WorkspaceMemberDetailResponse>> GetWorkspaceMemberDetail(int workspaceId, string memberUserId)

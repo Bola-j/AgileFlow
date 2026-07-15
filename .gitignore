@@ -24,3 +24,4 @@ backend/**/obj/
 .DS_Store
 /backend/API/appsettings.json
 /backend/API/appsettings.Development.json
+/backend/API/wwwroot/uploads/

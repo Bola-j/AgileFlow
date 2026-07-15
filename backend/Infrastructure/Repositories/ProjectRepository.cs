@@ -41,6 +41,26 @@ public class ProjectRepository : IProjectRepository
         return await _context.Projects.AnyAsync(p => p.Id == id && !p.IsDeleted);
     }
 
+    public async Task<bool> HasSprintsEndingAfterAsync(int projectId, DateTime endDate)
+    {
+        var end = endDate.Date;
+        return await _context.Sprints.AnyAsync(s =>
+            s.ProjectId == projectId &&
+            !s.IsDeleted &&
+            s.EndDate.Date > end);
+    }
+
+    public async Task<bool> HasTasksDueAfterAsync(int projectId, DateTime endDate)
+    {
+        var end = endDate.Date;
+        return await _context.ProjectTasks.AnyAsync(t =>
+            t.Sprint != null &&
+            t.Sprint.ProjectId == projectId &&
+            !t.IsDeleted &&
+            !t.Sprint.IsDeleted &&
+            t.DueDate.Date > end);
+    }
+
     public async Task<Project> AddAsync(Project project)
     {
         await _context.Projects.AddAsync(project);

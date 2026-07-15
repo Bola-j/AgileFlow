@@ -17,6 +17,7 @@ namespace Application.Interfaces
         Task UpdateColumnAsync(BoardColumn column);
         Task DeleteColumnAsync(BoardColumn column);
         Task<int> GetColumnsCountAsync(int boardId); 
+        Task<bool> ColumnHasActiveTasksAsync(int columnId);
         Task UpdateColumnsOrderAsync(List<BoardColumn> columns);
         Task<List<BoardColumn>> GetColumnsByProjectIdAsync(int projectId);
         Task<Board?> GetBoardWithDetailsByProjectIdAsync(int projectId,int sprintId);

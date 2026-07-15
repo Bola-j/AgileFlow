@@ -2,14 +2,14 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { clearStoredAuth, getStoredAuth, setStoredAuth, toStoredAuth } from "@/services/authStorage";
 import type { AuthResponseDto, RefreshRequestDto } from "@/types/api";
 
-const baseURL = import.meta.env.VITE_API_URL ?? "http://localhost:6358";
+export const apiBaseURL = import.meta.env.VITE_API_URL ?? "http://localhost:6358";
 
 interface RetryConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
 
 export const apiClient = axios.create({
-  baseURL,
+  baseURL: apiBaseURL,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -31,7 +31,7 @@ apiClient.interceptors.response.use(
       original._retry = true;
       try {
         const payload: RefreshRequestDto = { accessToken: auth.accessToken, refreshToken: auth.refreshToken };
-        const response = await axios.post<AuthResponseDto>(`${baseURL}/api/auth/refresh`, payload);
+        const response = await axios.post<AuthResponseDto>(`${apiBaseURL}/api/auth/refresh`, payload);
         const refreshed = toStoredAuth(response.data, auth.remember);
         setStoredAuth(refreshed);
         original.headers.Authorization = `Bearer ${refreshed.accessToken}`;

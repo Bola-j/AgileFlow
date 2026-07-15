@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { UserAvatar } from "@/components/shared/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/forms";
@@ -17,7 +18,6 @@ const schema = z.object({
   firstName: z.string().max(50).optional(),
   lastName: z.string().max(50).optional(),
   phoneNumber: z.string().optional(),
-  profilePicture: z.string().url().optional().or(z.literal("")),
   dob: z.string().optional(),
   githubUsername: z.string().max(100).optional(),
 });
@@ -35,7 +35,6 @@ export function AccountPage() {
         firstName: account.data.firstName,
         lastName: account.data.lastName,
         phoneNumber: account.data.phoneNumber ?? "",
-        profilePicture: account.data.profilePicture ?? "",
         dob: account.data.dob ?? "",
         githubUsername: account.data.githubUsername ?? "",
       });
@@ -50,6 +49,15 @@ export function AccountPage() {
     },
     onError: (error) => toast.error(getErrorMessage(error)),
   });
+  const uploadPicture = useMutation({
+    mutationFn: accountApi.uploadProfilePicture,
+    onSuccess: async (updatedAccount) => {
+      queryClient.setQueryData(queryKeys.account, updatedAccount);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.account });
+      toast.success("Profile photo updated.");
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
 
   if (account.isLoading) return <Skeleton className="h-96" />;
   if (account.isError) return <ErrorState onRetry={() => void account.refetch()} />;
@@ -58,8 +66,37 @@ export function AccountPage() {
     <>
       <PageHeader title="Account" description="View and update your AgileFlow profile." />
       <Card className="max-w-3xl">
-        <CardHeader><CardTitle>Profile</CardTitle></CardHeader>
+        <CardHeader>
+          <div className="flex items-center gap-4">
+            <UserAvatar
+              className="h-16 w-16 text-lg"
+              src={account.data?.profilePicture}
+              name={`${account.data?.firstName ?? ""} ${account.data?.lastName ?? ""}`.trim()}
+              email={account.data?.email}
+            />
+            <div>
+              <CardTitle>Profile</CardTitle>
+              <p className="mt-1 text-sm text-muted-foreground">{account.data?.email}</p>
+            </div>
+          </div>
+        </CardHeader>
         <CardContent>
+          <div className="mb-6 max-w-md">
+            <Field label="Upload profile photo">
+              <Input
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                disabled={uploadPicture.isPending}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (!file) return;
+                  uploadPicture.mutate(file);
+                  event.target.value = "";
+                }}
+              />
+            </Field>
+            <p className="mt-2 text-xs text-muted-foreground">{uploadPicture.isPending ? "Uploading..." : "JPG, PNG, WEBP, or GIF up to 5 MB."}</p>
+          </div>
           <form className="grid gap-4" onSubmit={form.handleSubmit((values) => update.mutate(values))}>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="First name" error={form.formState.errors.firstName?.message}><Input {...form.register("firstName")} /></Field>
@@ -71,7 +108,6 @@ export function AccountPage() {
               <Field label="Date of birth" error={form.formState.errors.dob?.message}><Input type="date" {...form.register("dob")} /></Field>
             </div>
             <Field label="GitHub username" error={form.formState.errors.githubUsername?.message}><Input {...form.register("githubUsername")} /></Field>
-            <Field label="Profile picture URL" error={form.formState.errors.profilePicture?.message}><Input {...form.register("profilePicture")} /></Field>
             <Button className="w-fit" type="submit" disabled={update.isPending}>{update.isPending ? "Saving..." : "Save profile"}</Button>
           </form>
         </CardContent>
