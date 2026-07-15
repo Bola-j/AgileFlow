@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email - AgileFlow</title>
+    <meta name="description" content="Confirm your AgileFlow email address to activate your account and start collaborating.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --indigo: #4f46e5;
+            --indigo-dark: #3730a3;
+            --indigo-light: #818cf8;
+            --green: #10b981;
+            --red: #ef4444;
+            --bg: #0f0f1a;
+            --surface: rgba(255,255,255,0.05);
+            --border: rgba(255,255,255,0.10);
+            --text: #f1f5f9;
+            --muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image:
+                radial-gradient(ellipse 80% 60% at 50% -10%, rgba(79,70,229,0.25) 0%, transparent 70%);
+        }
+
+        .card {
+            width: 100%;
+            max-width: 460px;
+            padding: 48px 40px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            text-align: center;
+            animation: fadeUp 0.5s ease both;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .icon-wrap {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 36px;
+            transition: transform 0.3s ease;
+        }
+        .icon-wrap:hover { transform: scale(1.08); }
+        .icon-wrap.loading { background: rgba(79,70,229,0.15); border: 2px solid var(--indigo); }
+        .icon-wrap.success { background: rgba(16,185,129,0.15); border: 2px solid var(--green); }
+        .icon-wrap.error   { background: rgba(239,68,68,0.15);  border: 2px solid var(--red); }
+
+        .spinner {
+            width: 36px; height: 36px;
+            border: 3px solid rgba(79,70,229,0.3);
+            border-top-color: var(--indigo);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 12px; }
+        p  { color: var(--muted); line-height: 1.6; margin-bottom: 28px; }
+
+        .btn {
+            display: inline-block;
+            padding: 13px 28px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: opacity 0.2s, transform 0.15s;
+        }
+        .btn:hover  { opacity: 0.88; transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
+        .btn-primary { background: var(--indigo); color: #fff; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); margin-left: 12px; }
+
+        .logo { font-size: 1.1rem; font-weight: 800; color: var(--indigo-light); margin-bottom: 32px; letter-spacing: -0.02em; }
+    </style>
+</head>
+<body>
+    <div class="card" id="verify-card">
+        <div class="logo">AgileFlow</div>
+
+        <!-- Loading state -->
+        <div id="state-loading">
+            <div class="icon-wrap loading">
+                <div class="spinner"></div>
+            </div>
+            <h1>Verifying your email…</h1>
+            <p>Please wait while we confirm your address.</p>
+        </div>
+
+        <!-- Success state -->
+        <div id="state-success" style="display:none">
+            <div class="icon-wrap success">✓</div>
+            <h1>Email confirmed!</h1>
+            <p id="success-message">Your email address has been confirmed. You can now log in to AgileFlow.</p>
+            <a href="login.html" class="btn btn-primary" id="go-login-btn">Go to Login</a>
+        </div>
+
+        <!-- Error state -->
+        <div id="state-error" style="display:none">
+            <div class="icon-wrap error">✗</div>
+            <h1>Confirmation failed</h1>
+            <p id="error-message">The confirmation link is invalid or has expired.</p>
+            <a href="login.html" class="btn btn-outline">Back to Login</a>
+            <button class="btn btn-primary" id="resend-btn">Resend Email</button>
+        </div>
+    </div>
+
+    <script src="js/verify-email.js"></script>
+</body>
+</html>

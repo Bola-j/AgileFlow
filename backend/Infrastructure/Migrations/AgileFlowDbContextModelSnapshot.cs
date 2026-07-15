@@ -299,6 +299,71 @@ namespace Infrastructure.Migrations
                     b.ToTable("Commits");
                 });
 
+            modelBuilder.Entity("AgileFlow.Domain.Entities.EmailNotificationLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeduplicationKey")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("RecipientEmail")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("nvarchar(320)");
+
+                    b.Property<int?>("RelatedEntityId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RelatedEntityType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("SentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_EmailNotificationLogs_CreatedAt");
+
+                    b.HasIndex("DeduplicationKey")
+                        .IsUnique()
+                        .HasDatabaseName("IX_EmailNotificationLogs_DeduplicationKey");
+
+                    b.HasIndex("RecipientEmail", "EventType")
+                        .HasDatabaseName("IX_EmailNotificationLogs_Recipient_EventType");
+
+                    b.ToTable("EmailNotificationLogs");
+                });
+
             modelBuilder.Entity("AgileFlow.Domain.Entities.Notification", b =>
                 {
                     b.Property<int>("Id")

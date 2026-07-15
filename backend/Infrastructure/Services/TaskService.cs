@@ -1,9 +1,11 @@
 using AgileFlow.Domain.Entities;
 using Application.DTOs.Tasks;
 using Application.Interfaces;
+using AgileFlow.Application.Interfaces;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Services;
 
@@ -12,15 +14,21 @@ public class TaskService : ITaskService
     private readonly ITaskRepository _taskRepository;
     private readonly IWorkspaceAuthorizationService _authorizationService;
     private readonly IMapper _mapper;
+    private readonly INotificationEmailService _notificationEmail;
+    private readonly ILogger<TaskService> _logger;
 
     public TaskService(
         ITaskRepository taskRepository,
         IWorkspaceAuthorizationService authorizationService,
-        IMapper mapper)
+        IMapper mapper,
+        INotificationEmailService notificationEmail,
+        ILogger<TaskService> logger)
     {
         _taskRepository = taskRepository;
         _authorizationService = authorizationService;
         _mapper = mapper;
+        _notificationEmail = notificationEmail;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<TaskSummaryResponse>> GetBySprintAsync(int sprintId, string userId)
@@ -119,6 +127,28 @@ public class TaskService : ITaskService
             task.UpdateDueDate(request.DueDate);
         }
 
+        // Notify on ApprovalStatus change
+        if (request.ApprovalStatus.HasValue && task.ApprovalStatus != request.ApprovalStatus.Value)
+        {
+            var oldApproval = task.ApprovalStatus;
+            logs.Add(new TaskActivityLog("ApprovalStatus", id, userId, request.ApprovalStatus.Value.ToString(),
+                oldApproval?.ToString() ?? string.Empty));
+            task.UpdateApprovalStatus(request.ApprovalStatus.Value);
+
+            // Fire review-decision notification to each assignee
+            var updatedForNotif = await _taskRepository.GetByIdAsync(id);
+            if (updatedForNotif is not null)
+            {
+                var isApproved = request.ApprovalStatus.Value == ProjectTaskApprovalStatus.Approved;
+                foreach (var ut in updatedForNotif.UserTasks.Where(x => !x.IsDeleted))
+                {
+                    await TrySendNotificationAsync(() =>
+                        _notificationEmail.SendTaskReviewDecisionAsync(
+                            ut.AppUserId, id, task.Title, isApproved));
+                }
+            }
+        }
+
         await _taskRepository.UpdateAsync(task);
         foreach (var log in logs)
         {
@@ -181,6 +211,10 @@ public class TaskService : ITaskService
 
         await _authorizationService.EnsureTaskRoleAsync(id, userId, UserRole.Admin, UserRole.TeamLead);
         await AssignExistingTaskUserAsync(id, task.Sprint!.Project.WorkspaceId, request.UserId);
+
+        // Notify the newly assigned user
+        await TrySendNotificationAsync(() =>
+            _notificationEmail.SendTaskAssignedAsync(request.UserId, id, task.Title));
 
         var updated = await _taskRepository.GetByIdAsync(id);
         return _mapper.Map<TaskDetailResponse>(updated!);
@@ -307,4 +341,19 @@ public class TaskService : ITaskService
         return _mapper.Map<IEnumerable<TaskActivityLogResponse>>(logs);
     }
 
+    /// <summary>
+    /// Invokes <paramref name="notificationTask"/> and swallows any exception,
+    /// logging it so the primary business action is never rolled back by email failures.
+    /// </summary>
+    private async Task TrySendNotificationAsync(Func<Task> notificationTask)
+    {
+        try
+        {
+            await notificationTask();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Email notification failed (non-fatal).");
+        }
+    }
 }

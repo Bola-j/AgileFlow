@@ -40,7 +40,14 @@ public class UpdateTaskRequest
 
     [Required]
     public DateTime DueDate { get; set; }
+
+    /// <summary>
+    /// Optional. When set, updates the review/approval status and triggers a review-decision email
+    /// to all task assignees. Only Admins and TeamLeads can set this field.
+    /// </summary>
+    public ProjectTaskApprovalStatus? ApprovalStatus { get; set; }
 }
+
 
 public class UpdateTaskStatusRequest
 {

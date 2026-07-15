@@ -1,10 +1,11 @@
-﻿using AgileFlow.Application.Interfaces;
+using AgileFlow.Application.Interfaces;
 using Application.DTOs.Workspace;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Services
 {
@@ -17,18 +18,25 @@ namespace Infrastructure.Services
         private readonly IWorkspaceAuthorizationService _authorizationService;
         private readonly IMapper _mapper;
         private readonly IUserRepository _userRepository;
+        private readonly INotificationEmailService _notificationEmail;
+        private readonly ILogger<WorkspaceService> _logger;
 
         public WorkspaceService(
             IWorkspaceRepository workspaceRepository,
             IUserWorkspaceRepository userWorkspaceRepository,
             IWorkspaceAuthorizationService authorizationService,
-            IMapper mapper, IUserRepository userRepository)
+            IMapper mapper,
+            IUserRepository userRepository,
+            INotificationEmailService notificationEmail,
+            ILogger<WorkspaceService> logger)
         {
             _workspaceRepository = workspaceRepository;
             _userWorkspaceRepository = userWorkspaceRepository;
             _authorizationService = authorizationService;
             _mapper = mapper;
             _userRepository = userRepository;
+            _notificationEmail = notificationEmail;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<WorkspaceSummaryResponse>> GetMyWorkspacesAsync(string userId)
@@ -113,10 +121,18 @@ namespace Infrastructure.Services
                     throw new InvalidOperationException("User is already an active member of this workspace.");
                 membership.Restore(request.Role);
                 await _userWorkspaceRepository.UpdateAsync(membership);
+
+                // Fire-and-forget: failure must never roll back the membership restore
+                await TrySendNotificationAsync(() =>
+                    _notificationEmail.SendWorkspaceInviteAsync(request.UserId, workspace.Name, workspaceId));
                 return;
             }
             var newMembership = new UserWorkspace(request.UserId, workspaceId, request.Role);
             await _userWorkspaceRepository.AddAsync(newMembership);
+
+            // Fire-and-forget: failure must never roll back the membership add
+            await TrySendNotificationAsync(() =>
+                _notificationEmail.SendWorkspaceInviteAsync(request.UserId, workspace.Name, workspaceId));
         }
 
 
@@ -210,6 +226,22 @@ namespace Infrastructure.Services
         private static bool IsWorkspaceManager(UserRole role)
         {
             return role is UserRole.Admin or UserRole.TeamLead;
+        }
+
+        /// <summary>
+        /// Invokes <paramref name="notificationTask"/> and swallows any exception,
+        /// logging it so the primary business action is never rolled back by email failures.
+        /// </summary>
+        private async Task TrySendNotificationAsync(Func<Task> notificationTask)
+        {
+            try
+            {
+                await notificationTask();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Email notification failed (non-fatal).");
+            }
         }
 
         public async Task<WorkspaceMemberDetailResponse> GetWorkspaceMemberDetailAsync(int workspaceId, string memberUserId, string currentUserId)

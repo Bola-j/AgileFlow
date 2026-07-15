@@ -1,4 +1,4 @@
-﻿using AgileFlow.Domain.Entities;
+using AgileFlow.Domain.Entities;
 using Domain.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +28,8 @@ namespace AgileFlow.Infrastructure.Persistence.Data
 
 
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+
+        public DbSet<EmailNotificationLog> EmailNotificationLogs { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

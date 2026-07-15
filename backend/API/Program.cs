@@ -1,4 +1,4 @@
-﻿using AgileFlow.Application.Interfaces;
+using AgileFlow.Application.Interfaces;
 using AgileFlow.Domain.Entities;
 using AgileFlow.Infrastructure.Persistence.Data;
 using AgileFlow.Infrastructure.Repositories;
@@ -124,6 +124,13 @@ internal class Program
         builder.Services.AddScoped<ISprintService, SprintService>();
         builder.Services.AddScoped<ITaskService, TaskService>();
         builder.Services.AddScoped<IBoardService, BoardService>();
+
+        // ── Email services ────────────────────────────────────────────────────────────
+        // Configure SMTP settings in appsettings.json under the "Email:Smtp" section.
+        builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+        builder.Services.AddScoped<INotificationEmailService, NotificationEmailService>();
+        builder.Services.AddScoped<IEmailNotificationLogRepository, EmailNotificationLogRepository>();
+        builder.Services.AddHostedService<DueDateReminderWorker>();
 
         // ── CORS (Vite dev server) ────────────────────────────────────────────────────
         builder.Services.AddCors(options =>

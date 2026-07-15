@@ -25,7 +25,10 @@ public sealed record LogoutRequestDto(
     string RefreshToken
 );
 
-/// <summary>Returned by register, login, and refresh.</summary>
+/// <summary>
+/// Returned by register, login, and refresh.
+/// Login and refresh return this after full authentication succeeds.
+/// </summary>
 public sealed record AuthResponseDto(
     string AccessToken,
     string RefreshToken,
@@ -33,4 +36,27 @@ public sealed record AuthResponseDto(
     string UserId,
     string Email,
     string Role
+);
+
+/// <summary>
+/// Returned by POST /api/auth/register.
+/// Registration no longer issues tokens — the user must confirm their email first.
+/// </summary>
+public sealed record RegisterResponseDto(
+    string UserId,
+    string Email,
+    bool RequiresEmailConfirmation,
+    string Message
+);
+
+/// <summary>Returned by GET /api/auth/confirm-email.</summary>
+public sealed record ConfirmEmailResponseDto(
+    string Email,
+    bool Confirmed,
+    string Message
+);
+
+/// <summary>Payload for POST /api/auth/resend-confirmation.</summary>
+public sealed record ResendEmailConfirmationRequestDto(
+    string Email
 );
