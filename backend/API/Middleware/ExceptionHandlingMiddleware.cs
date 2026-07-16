@@ -63,24 +63,30 @@ public class ExceptionHandlingMiddleware
 
     private static int MapStatusCode(Exception exception) => exception switch
     {
-        KeyNotFoundException        => StatusCodes.Status404NotFound,
-        EmailNotVerifiedException   => StatusCodes.Status403Forbidden,
-        UnauthorizedAccessException => StatusCodes.Status403Forbidden,
-        ArgumentException           => StatusCodes.Status400BadRequest,
-        InvalidOperationException   => StatusCodes.Status409Conflict,
-        SecurityTokenException      => StatusCodes.Status401Unauthorized,
-        _                           => StatusCodes.Status500InternalServerError,
+        KeyNotFoundException              => StatusCodes.Status404NotFound,
+        EmailNotVerifiedException         => StatusCodes.Status403Forbidden,
+        OAuthAuthenticationException      => StatusCodes.Status401Unauthorized,
+        UnauthorizedAccessException       => StatusCodes.Status403Forbidden,
+        OAuthMissingEmailException        => StatusCodes.Status400BadRequest,
+        ArgumentException                 => StatusCodes.Status400BadRequest,
+        DuplicateExternalLoginException   => StatusCodes.Status409Conflict,
+        InvalidOperationException         => StatusCodes.Status409Conflict,
+        SecurityTokenException            => StatusCodes.Status401Unauthorized,
+        _                                 => StatusCodes.Status500InternalServerError,
     };
 
     private static string MapMessage(Exception exception) => exception switch
     {
-        KeyNotFoundException        => exception.Message,
-        EmailNotVerifiedException   => exception.Message,
-        UnauthorizedAccessException => exception.Message,
-        ArgumentException           => exception.Message,
-        InvalidOperationException   => exception.Message,
-        SecurityTokenException      => exception.Message,
-        _                           => UnexpectedErrorMessage,
+        KeyNotFoundException              => exception.Message,
+        EmailNotVerifiedException         => exception.Message,
+        OAuthAuthenticationException      => exception.Message,
+        UnauthorizedAccessException       => exception.Message,
+        OAuthMissingEmailException        => exception.Message,
+        ArgumentException                 => exception.Message,
+        DuplicateExternalLoginException   => exception.Message,
+        InvalidOperationException         => exception.Message,
+        SecurityTokenException            => exception.Message,
+        _                                 => UnexpectedErrorMessage,
     };
 }
 

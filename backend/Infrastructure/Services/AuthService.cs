@@ -189,6 +189,15 @@ public sealed class AuthService(
             Message: "Email confirmed for development testing.");
     }
 
+    public async Task<AuthResponseDto> CreateSessionForUserAsync(AppUser user)
+    {
+        if (user.IsDeleted)
+            throw new UnauthorizedAccessException("This account has been deactivated.");
+
+        var role = await ResolveHighestRoleAsync(user.Id);
+        return await IssueTokenPairAsync(user, role);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private async Task SendVerificationEmailAsync(AppUser user)

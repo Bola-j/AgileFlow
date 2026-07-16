@@ -8,7 +8,10 @@ namespace AgileFlow.API.Controllers;
 [ApiController]
 [Route("api/auth")]
 [Produces("application/json")]
-public sealed class AuthController(IAuthService authService, IWebHostEnvironment environment) : ControllerBase
+public sealed class AuthController(
+    IAuthService authService,
+    IExternalAuthService externalAuthService,
+    IWebHostEnvironment environment) : ControllerBase
 {
     /// <summary>
     /// Register a new user. Sends a verification email and returns a lightweight response.
@@ -37,6 +40,36 @@ public sealed class AuthController(IAuthService authService, IWebHostEnvironment
     public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
     {
         var response = await authService.LoginAsync(request);
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Exchange a Google OAuth authorization code for AgileFlow JWT + refresh tokens.
+    /// </summary>
+    [HttpPost("google")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> GoogleLogin([FromBody] OAuthLoginRequestDto request)
+    {
+        var response = await externalAuthService.GoogleLoginAsync(request);
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Exchange a GitHub OAuth authorization code for AgileFlow JWT + refresh tokens.
+    /// </summary>
+    [HttpPost("github")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> GitHubLogin([FromBody] OAuthLoginRequestDto request)
+    {
+        var response = await externalAuthService.GitHubLoginAsync(request);
         return Ok(response);
     }
 

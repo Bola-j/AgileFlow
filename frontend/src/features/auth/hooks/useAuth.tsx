@@ -2,15 +2,17 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { routes } from "@/constants/routes";
-import { authApi } from "@/features/auth/api/authApi";
+import { authApi, oauthLogin } from "@/features/auth/api/authApi";
+import type { OAuthProvider } from "@/features/auth/oauth/oauthConfig";
 import { clearStoredAuth, getStoredAuth, setStoredAuth, toStoredAuth, type StoredAuth } from "@/services/authStorage";
 import { getErrorMessage } from "@/services/apiClient";
-import type { LoginRequestDto, RegisterRequestDto, RegisterResponseDto } from "@/types/api";
+import type { LoginRequestDto, OAuthLoginRequestDto, RegisterRequestDto, RegisterResponseDto } from "@/types/api";
 
 interface AuthContextValue {
   auth: StoredAuth | null;
   isAuthenticated: boolean;
   login: (payload: LoginRequestDto, remember: boolean) => Promise<void>;
+  loginWithOAuth: (provider: OAuthProvider, payload: OAuthLoginRequestDto, remember: boolean) => Promise<void>;
   register: (payload: RegisterRequestDto) => Promise<RegisterResponseDto>;
   logout: () => Promise<void>;
 }
@@ -46,6 +48,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [navigate, persist],
   );
 
+  const loginWithOAuth = useCallback(
+    async (provider: OAuthProvider, payload: OAuthLoginRequestDto, remember: boolean) => {
+      const response = await oauthLogin(provider, payload);
+      persist(toStoredAuth(response, remember));
+      toast.success("Signed in successfully.");
+      navigate(routes.dashboard, { replace: true });
+    },
+    [navigate, persist],
+  );
+
   const register = useCallback(
     async (payload: RegisterRequestDto) => {
       const response = await authApi.register(payload);
@@ -68,7 +80,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [navigate]);
 
-  const value = useMemo(() => ({ auth, isAuthenticated: Boolean(auth), login, register, logout }), [auth, login, logout, register]);
+  const value = useMemo(
+    () => ({ auth, isAuthenticated: Boolean(auth), login, loginWithOAuth, register, logout }),
+    [auth, login, loginWithOAuth, logout, register],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

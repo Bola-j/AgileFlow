@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/forms";
 import { routes } from "@/constants/routes";
 import { authApi } from "@/features/auth/api/authApi";
+import { OAuthButtons } from "@/features/auth/components/OAuthButtons";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { getErrorMessage } from "@/services/apiClient";
 
@@ -93,6 +94,7 @@ export function LoginPage() {
               </Button>
             ) : null}
             <Button type="submit" disabled={form.formState.isSubmitting}>{form.formState.isSubmitting ? "Signing in..." : "Sign in"}</Button>
+            <OAuthButtons remember={form.watch("remember")} disabled={form.formState.isSubmitting} />
           </form>
           <p className="mt-5 text-sm text-muted-foreground">
             No account? <Link className="font-medium text-primary" to={routes.register}>Create one</Link>

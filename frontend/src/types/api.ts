@@ -66,6 +66,11 @@ export interface ResendEmailConfirmationRequestDto {
   email: string;
 }
 
+export interface OAuthLoginRequestDto {
+  code: string;
+  redirectUri: string;
+}
+
 export interface AccountResponse {
   userId: string;
   firstName: string;
