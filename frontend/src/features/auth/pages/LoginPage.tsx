@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
 import { Eye, KanbanSquare } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/forms";
 import { routes } from "@/constants/routes";
+import { authApi } from "@/features/auth/api/authApi";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { getErrorMessage } from "@/services/apiClient";
 
@@ -19,18 +21,42 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+interface EmailConfirmationError {
+  message?: string;
+  email?: string;
+  requiresEmailConfirmation?: boolean;
+}
+
 export function LoginPage() {
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [isResending, setIsResending] = useState(false);
   const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { email: "", password: "", remember: true } });
 
   async function onSubmit(values: FormValues) {
     setError(null);
+    setUnverifiedEmail(null);
     try {
       await login({ email: values.email, password: values.password }, values.remember);
     } catch (submitError) {
+      const email = getUnverifiedEmail(submitError, values.email);
+      if (email) setUnverifiedEmail(email);
       setError(getErrorMessage(submitError));
+    }
+  }
+
+  async function resendVerification() {
+    if (!unverifiedEmail) return;
+    setIsResending(true);
+    try {
+      await authApi.resendConfirmation({ email: unverifiedEmail });
+      setError("Verification email sent. Check your inbox.");
+    } catch (resendError) {
+      setError(getErrorMessage(resendError));
+    } finally {
+      setIsResending(false);
     }
   }
 
@@ -61,6 +87,11 @@ export function LoginPage() {
               Remember me
             </label>
             {error ? <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p> : null}
+            {unverifiedEmail ? (
+              <Button type="button" variant="outline" disabled={isResending} onClick={resendVerification}>
+                {isResending ? "Sending..." : "Resend verification email"}
+              </Button>
+            ) : null}
             <Button type="submit" disabled={form.formState.isSubmitting}>{form.formState.isSubmitting ? "Signing in..." : "Sign in"}</Button>
           </form>
           <p className="mt-5 text-sm text-muted-foreground">
@@ -74,4 +105,13 @@ export function LoginPage() {
 
 function AuthFrame({ children }: { children: React.ReactNode }) {
   return <main className="grid min-h-screen place-items-center bg-background p-4">{children}</main>;
+}
+
+function getUnverifiedEmail(error: unknown, fallbackEmail: string) {
+  if (!axios.isAxiosError(error)) return null;
+  const data = error.response?.data as EmailConfirmationError | undefined;
+  if (error.response?.status === 403 && data?.requiresEmailConfirmation) {
+    return data.email ?? fallbackEmail;
+  }
+  return null;
 }

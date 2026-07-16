@@ -16,7 +16,6 @@ const schema = z.object({
   lastName: z.string().min(1).max(50),
   email: z.string().email(),
   password: z.string().min(8),
-  remember: z.boolean(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -24,15 +23,17 @@ type FormValues = z.infer<typeof schema>;
 export function RegisterPage() {
   const { register } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { firstName: "", lastName: "", email: "", password: "", remember: true },
+    defaultValues: { firstName: "", lastName: "", email: "", password: "" },
   });
 
   async function onSubmit(values: FormValues) {
     setError(null);
     try {
-      await register({ firstName: values.firstName, lastName: values.lastName, email: values.email, password: values.password }, values.remember);
+      const response = await register({ firstName: values.firstName, lastName: values.lastName, email: values.email, password: values.password });
+      setVerificationEmail(response.email);
     } catch (submitError) {
       setError(getErrorMessage(submitError));
     }
@@ -48,20 +49,30 @@ export function RegisterPage() {
           <CardTitle>Create your AgileFlow account</CardTitle>
         </CardHeader>
         <CardContent>
-          <form className="grid gap-4" onSubmit={form.handleSubmit(onSubmit)}>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="First name" error={form.formState.errors.firstName?.message}><Input {...form.register("firstName")} /></Field>
-              <Field label="Last name" error={form.formState.errors.lastName?.message}><Input {...form.register("lastName")} /></Field>
+          {verificationEmail ? (
+            <div className="grid gap-4">
+              <p className="rounded-md bg-primary/10 p-3 text-sm text-primary">
+                We sent a verification link to {verificationEmail}. Verify your email before signing in.
+              </p>
+              <Button asChild><Link to={routes.login}>Back to sign in</Link></Button>
             </div>
-            <Field label="Email" error={form.formState.errors.email?.message}><Input type="email" {...form.register("email")} /></Field>
-            <Field label="Password" error={form.formState.errors.password?.message}><Input type="password" {...form.register("password")} /></Field>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="h-4 w-4 rounded border" {...form.register("remember")} />Remember me</label>
-            {error ? <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p> : null}
-            <Button type="submit" disabled={form.formState.isSubmitting}>{form.formState.isSubmitting ? "Creating..." : "Create account"}</Button>
-          </form>
-          <p className="mt-5 text-sm text-muted-foreground">
-            Already registered? <Link className="font-medium text-primary" to={routes.login}>Sign in</Link>
-          </p>
+          ) : (
+            <>
+              <form className="grid gap-4" onSubmit={form.handleSubmit(onSubmit)}>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="First name" error={form.formState.errors.firstName?.message}><Input {...form.register("firstName")} /></Field>
+                  <Field label="Last name" error={form.formState.errors.lastName?.message}><Input {...form.register("lastName")} /></Field>
+                </div>
+                <Field label="Email" error={form.formState.errors.email?.message}><Input type="email" {...form.register("email")} /></Field>
+                <Field label="Password" error={form.formState.errors.password?.message}><Input type="password" {...form.register("password")} /></Field>
+                {error ? <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p> : null}
+                <Button type="submit" disabled={form.formState.isSubmitting}>{form.formState.isSubmitting ? "Creating..." : "Create account"}</Button>
+              </form>
+              <p className="mt-5 text-sm text-muted-foreground">
+                Already registered? <Link className="font-medium text-primary" to={routes.login}>Sign in</Link>
+              </p>
+            </>
+          )}
         </CardContent>
       </Card>
     </main>

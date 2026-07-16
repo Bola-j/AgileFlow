@@ -88,9 +88,8 @@
                   "pm.test('Admin registered', () => pm.response.to.have.status(201));",
                   "const json = pm.response.json();",
                   "pm.environment.set('adminUserId', json.userId);",
-                  "pm.environment.set('adminAccessToken', json.accessToken);",
-                  "pm.environment.set('adminRefreshToken', json.refreshToken);",
-                  "pm.test('Admin token returned', () => pm.expect(json.accessToken).to.be.a('string').and.not.empty);"
+                  "pm.test('Registration requires email confirmation', () => pm.expect(json.requiresEmailConfirmation).to.eql(true));",
+                  "pm.test('Registration does not issue tokens', () => pm.expect(json.accessToken).to.be.undefined);"
                 ]
               }
             }
@@ -121,8 +120,8 @@
                   "pm.test('Developer registered', () => pm.response.to.have.status(201));",
                   "const json = pm.response.json();",
                   "pm.environment.set('developerUserId', json.userId);",
-                  "pm.environment.set('developerAccessToken', json.accessToken);",
-                  "pm.environment.set('developerRefreshToken', json.refreshToken);"
+                  "pm.test('Registration requires email confirmation', () => pm.expect(json.requiresEmailConfirmation).to.eql(true));",
+                  "pm.test('Registration does not issue tokens', () => pm.expect(json.accessToken).to.be.undefined);"
                 ]
               }
             }
@@ -153,8 +152,8 @@
                   "pm.test('TeamLead registered', () => pm.response.to.have.status(201));",
                   "const json = pm.response.json();",
                   "pm.environment.set('teamLeadUserId', json.userId);",
-                  "pm.environment.set('teamLeadAccessToken', json.accessToken);",
-                  "pm.environment.set('teamLeadRefreshToken', json.refreshToken);"
+                  "pm.test('Registration requires email confirmation', () => pm.expect(json.requiresEmailConfirmation).to.eql(true));",
+                  "pm.test('Registration does not issue tokens', () => pm.expect(json.accessToken).to.be.undefined);"
                 ]
               }
             }
@@ -185,8 +184,128 @@
                   "pm.test('Outsider registered', () => pm.response.to.have.status(201));",
                   "const json = pm.response.json();",
                   "pm.environment.set('outsiderUserId', json.userId);",
-                  "pm.environment.set('outsiderAccessToken', json.accessToken);",
-                  "pm.environment.set('outsiderRefreshToken', json.refreshToken);"
+                  "pm.test('Registration requires email confirmation', () => pm.expect(json.requiresEmailConfirmation).to.eql(true));",
+                  "pm.test('Registration does not issue tokens', () => pm.expect(json.accessToken).to.be.undefined);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Development Confirm Admin Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{adminEmail}}\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/dev/confirm-email"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Admin email confirmed in Development', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Email is confirmed', () => pm.expect(json.confirmed).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Development Confirm Developer Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{developerEmail}}\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/dev/confirm-email"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Developer email confirmed in Development', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Email is confirmed', () => pm.expect(json.confirmed).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Development Confirm TeamLead Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{teamLeadEmail}}\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/dev/confirm-email"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TeamLead email confirmed in Development', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Email is confirmed', () => pm.expect(json.confirmed).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Development Confirm Outsider Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{outsiderEmail}}\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/dev/confirm-email"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Outsider email confirmed in Development', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Email is confirmed', () => pm.expect(json.confirmed).to.eql(true));"
                 ]
               }
             }

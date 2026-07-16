@@ -2,6 +2,7 @@ export const routes = {
   dashboard: "/",
   login: "/login",
   register: "/register",
+  verifyEmail: "/verify-email",
   workspaces: "/workspaces",
   workspace: (workspaceId: number | string) => `/workspaces/${workspaceId}`,
   project: (projectId: number | string) => `/projects/${projectId}`,

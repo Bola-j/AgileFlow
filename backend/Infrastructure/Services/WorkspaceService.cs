@@ -5,6 +5,7 @@ using Application.Interfaces.Repositories;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Services
 {
@@ -17,18 +18,25 @@ namespace Infrastructure.Services
         private readonly IWorkspaceAuthorizationService _authorizationService;
         private readonly IMapper _mapper;
         private readonly IUserRepository _userRepository;
+        private readonly INotificationEmailService _notificationEmail;
+        private readonly ILogger<WorkspaceService> _logger;
 
         public WorkspaceService(
             IWorkspaceRepository workspaceRepository,
             IUserWorkspaceRepository userWorkspaceRepository,
             IWorkspaceAuthorizationService authorizationService,
-            IMapper mapper, IUserRepository userRepository)
+            IMapper mapper,
+            IUserRepository userRepository,
+            INotificationEmailService notificationEmail,
+            ILogger<WorkspaceService> logger)
         {
             _workspaceRepository = workspaceRepository;
             _userWorkspaceRepository = userWorkspaceRepository;
             _authorizationService = authorizationService;
             _mapper = mapper;
             _userRepository = userRepository;
+            _notificationEmail = notificationEmail;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<WorkspaceSummaryResponse>> GetMyWorkspacesAsync(string userId)
@@ -113,10 +121,14 @@ namespace Infrastructure.Services
                     throw new InvalidOperationException("User is already an active member of this workspace.");
                 membership.Restore(request.Role);
                 await _userWorkspaceRepository.UpdateAsync(membership);
+                await TrySendNotificationAsync(() =>
+                    _notificationEmail.SendWorkspaceInviteAsync(targetUser.Id, workspace.Name, workspaceId));
                 return;
             }
             var newMembership = new UserWorkspace(targetUser.Id, workspaceId, request.Role);
             await _userWorkspaceRepository.AddAsync(newMembership);
+            await TrySendNotificationAsync(() =>
+                _notificationEmail.SendWorkspaceInviteAsync(targetUser.Id, workspace.Name, workspaceId));
         }
 
 
@@ -203,6 +215,18 @@ namespace Infrastructure.Services
 
             var user = await _userRepository.GetByEmailAsync(decoded);
             return user?.Id ?? throw new KeyNotFoundException($"User with email '{decoded}' does not exist in the system.");
+        }
+
+        private async Task TrySendNotificationAsync(Func<Task> notificationTask)
+        {
+            try
+            {
+                await notificationTask();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Email notification failed (non-fatal).");
+            }
         }
 
         public async Task<WorkspaceMemberDetailResponse> GetWorkspaceMemberDetailAsync(int workspaceId, string memberUserId, string currentUserId)

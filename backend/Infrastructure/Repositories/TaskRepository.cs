@@ -2,6 +2,7 @@ using AgileFlow.Domain.Entities;
 using AgileFlow.Infrastructure.Persistence.Data;
 using Application.Interfaces;
 using Domain.Entities;
+using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories;
@@ -123,6 +124,26 @@ public class TaskRepository : ITaskRepository
         return await _context.TaskDependents
             .Where(td => td.TaskId == taskId)
             .Select(td => td.DependedTaskId)
+            .ToListAsync();
+    }
+
+    public async Task<List<string>> GetWorkspaceReviewerUserIdsForTaskAsync(int taskId)
+    {
+        var workspaceId = await _context.ProjectTasks
+            .Where(task => task.Id == taskId)
+            .Select(task => task.Sprint!.Project.WorkspaceId)
+            .FirstOrDefaultAsync();
+
+        if (workspaceId == 0)
+            return new List<string>();
+
+        return await _context.UserWorkspaces
+            .Where(membership =>
+                membership.WorkspaceId == workspaceId &&
+                !membership.IsDeleted &&
+                (membership.Role == UserRole.Admin || membership.Role == UserRole.TeamLead))
+            .Select(membership => membership.AppUserId)
+            .Distinct()
             .ToListAsync();
     }
 

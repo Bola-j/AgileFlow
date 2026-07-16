@@ -4,6 +4,7 @@ import { routes } from "@/constants/routes";
 import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
+import { VerifyEmailPage } from "@/features/auth/pages/VerifyEmailPage";
 import { AppShell } from "@/layouts/AppShell";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { AccountPage } from "@/features/account/pages/AccountPage";
@@ -21,6 +22,7 @@ export function App() {
       <Routes>
         <Route path={routes.login} element={<LoginPage />} />
         <Route path={routes.register} element={<RegisterPage />} />
+        <Route path={routes.verifyEmail} element={<VerifyEmailPage />} />
         <Route element={<ProtectedRoute />}>
           <Route element={<AppShell />}>
             <Route index element={<DashboardPage />} />

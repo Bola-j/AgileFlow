@@ -1,9 +1,11 @@
 using AgileFlow.Domain.Entities;
+using AgileFlow.Application.Interfaces;
 using Application.DTOs.Tasks;
 using Application.Interfaces;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Services;
 
@@ -12,15 +14,21 @@ public class TaskService : ITaskService
     private readonly ITaskRepository _taskRepository;
     private readonly IWorkspaceAuthorizationService _authorizationService;
     private readonly IMapper _mapper;
+    private readonly INotificationEmailService _notificationEmail;
+    private readonly ILogger<TaskService> _logger;
 
     public TaskService(
         ITaskRepository taskRepository,
         IWorkspaceAuthorizationService authorizationService,
-        IMapper mapper)
+        IMapper mapper,
+        INotificationEmailService notificationEmail,
+        ILogger<TaskService> logger)
     {
         _taskRepository = taskRepository;
         _authorizationService = authorizationService;
         _mapper = mapper;
+        _notificationEmail = notificationEmail;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<TaskSummaryResponse>> GetBySprintAsync(int sprintId, string userId)
@@ -213,6 +221,13 @@ public class TaskService : ITaskService
             await _taskRepository.AddActivityLogAsync(log);
         }
 
+        var reviewerUserIds = await _taskRepository.GetWorkspaceReviewerUserIdsForTaskAsync(id);
+        foreach (var reviewerUserId in reviewerUserIds.Where(reviewerUserId => reviewerUserId != userId))
+        {
+            await TrySendNotificationAsync(() =>
+                _notificationEmail.SendTaskSubmittedForReviewAsync(reviewerUserId, id, task.Title, commitHash));
+        }
+
         var updated = await _taskRepository.GetByIdAsync(id);
         return _mapper.Map<TaskDetailResponse>(updated!);
     }
@@ -266,6 +281,17 @@ public class TaskService : ITaskService
         await _taskRepository.AddActivityLogAsync(new TaskActivityLog("ReviewComment", id, userId, string.Empty, comment));
 
         var updated = await _taskRepository.GetByIdAsync(id);
+        foreach (var assignee in updated!.UserTasks.Where(assignment => !assignment.IsDeleted))
+        {
+            await TrySendNotificationAsync(() =>
+                _notificationEmail.SendTaskReviewDecisionAsync(
+                    assignee.AppUserId,
+                    id,
+                    task.Title,
+                    request.ApprovalStatus == ProjectTaskApprovalStatus.Approved,
+                    comment));
+        }
+
         return _mapper.Map<TaskDetailResponse>(updated!);
     }
 
@@ -328,6 +354,9 @@ public class TaskService : ITaskService
 
         await _authorizationService.EnsureTaskRoleAsync(id, userId, UserRole.Admin, UserRole.TeamLead);
         await AssignExistingTaskUserAsync(id, task.Sprint!.Project.WorkspaceId, request.UserId);
+
+        await TrySendNotificationAsync(() =>
+            _notificationEmail.SendTaskAssignedAsync(request.UserId, id, task.Title));
 
         var updated = await _taskRepository.GetByIdAsync(id);
         return _mapper.Map<TaskDetailResponse>(updated!);
@@ -504,6 +533,18 @@ public class TaskService : ITaskService
         await _authorizationService.EnsureTaskMemberAsync(taskId, userId);
         var logs = await _taskRepository.GetActivityLogsByTaskIdAsync(taskId);
         return _mapper.Map<IEnumerable<TaskActivityLogResponse>>(logs);
+    }
+
+    private async Task TrySendNotificationAsync(Func<Task> notificationTask)
+    {
+        try
+        {
+            await notificationTask();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Email notification failed (non-fatal).");
+        }
     }
 
 }

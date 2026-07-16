@@ -19,6 +19,7 @@ public interface ITaskRepository
     Task AddDependencyAsync(TaskDependent dependency);
     Task RemoveDependencyAsync(TaskDependent dependency);
     Task<List<int>> GetDependedTaskIdsAsync(int taskId);
+    Task<List<string>> GetWorkspaceReviewerUserIdsForTaskAsync(int taskId);
     Task<Commit?> GetLatestCommitAsync(int taskId);
     Task AddCommitAsync(Commit commit);
     Task UpdateCommitAsync(Commit commit);

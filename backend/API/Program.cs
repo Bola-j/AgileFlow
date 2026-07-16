@@ -125,6 +125,10 @@ internal class Program
         builder.Services.AddScoped<ITaskService, TaskService>();
         builder.Services.AddScoped<IBoardService, BoardService>();
         builder.Services.AddScoped<IDashboardService, DashboardService>();
+        builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+        builder.Services.AddScoped<INotificationEmailService, NotificationEmailService>();
+        builder.Services.AddScoped<IEmailNotificationLogRepository, EmailNotificationLogRepository>();
+        builder.Services.AddHostedService<DueDateReminderWorker>();
 
         // ── CORS (Vite dev server) ────────────────────────────────────────────────────
         builder.Services.AddCors(options =>

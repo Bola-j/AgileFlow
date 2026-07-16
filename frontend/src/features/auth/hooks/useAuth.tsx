@@ -5,13 +5,13 @@ import { routes } from "@/constants/routes";
 import { authApi } from "@/features/auth/api/authApi";
 import { clearStoredAuth, getStoredAuth, setStoredAuth, toStoredAuth, type StoredAuth } from "@/services/authStorage";
 import { getErrorMessage } from "@/services/apiClient";
-import type { LoginRequestDto, RegisterRequestDto } from "@/types/api";
+import type { LoginRequestDto, RegisterRequestDto, RegisterResponseDto } from "@/types/api";
 
 interface AuthContextValue {
   auth: StoredAuth | null;
   isAuthenticated: boolean;
   login: (payload: LoginRequestDto, remember: boolean) => Promise<void>;
-  register: (payload: RegisterRequestDto, remember: boolean) => Promise<void>;
+  register: (payload: RegisterRequestDto) => Promise<RegisterResponseDto>;
   logout: () => Promise<void>;
 }
 
@@ -47,13 +47,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const register = useCallback(
-    async (payload: RegisterRequestDto, remember: boolean) => {
+    async (payload: RegisterRequestDto) => {
       const response = await authApi.register(payload);
-      persist(toStoredAuth(response, remember));
-      toast.success("Account created.");
-      navigate(routes.dashboard, { replace: true });
+      toast.success("Account created. Check your email to verify it.");
+      return response;
     },
-    [navigate, persist],
+    [],
   );
 
   const logout = useCallback(async () => {

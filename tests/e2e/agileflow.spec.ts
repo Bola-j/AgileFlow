@@ -1,20 +1,23 @@
-import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
-const apiBaseUrl = process.env.PLAYWRIGHT_API_URL ?? "http://127.0.0.1:6358";
 const password = "Admin123!";
+const confirmedEmail = process.env.PLAYWRIGHT_CONFIRMED_EMAIL;
+const confirmedPassword = process.env.PLAYWRIGHT_CONFIRMED_PASSWORD ?? password;
 
-test("registers, signs in, and loads dashboard", async ({ page }) => {
+test("registers and shows email verification state", async ({ page }) => {
   const email = `e2e-${Date.now()}@example.com`;
   await register(page, email);
-  await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+  await expect(page.getByText(`We sent a verification link to ${email}.`)).toBeVisible();
 });
 
-test("@editing user profile edit persists", async ({ page, request }) => {
-  const email = `editing-${Date.now()}@example.com`;
-  const auth = await registerViaApi(request, email);
-  await page.addInitScript((storedAuth) => {
-    localStorage.setItem("agileflow.auth", JSON.stringify(storedAuth));
-  }, { ...auth, remember: true });
+test("@editing user profile edit persists", async ({ page }) => {
+  test.skip(!confirmedEmail, "Set PLAYWRIGHT_CONFIRMED_EMAIL for authenticated editing coverage.");
+
+  await page.goto("/login");
+  await page.getByLabel("Email").fill(confirmedEmail!);
+  await page.getByLabel("Password").fill(confirmedPassword);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
 
   await page.goto("/account");
   await page.getByLabel("First name").fill("Edited");
@@ -32,12 +35,4 @@ async function register(page: Page, email: string) {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Create account" }).click();
-}
-
-async function registerViaApi(request: APIRequestContext, email: string) {
-  const response = await request.post(`${apiBaseUrl}/api/auth/register`, {
-    data: { firstName: "E2E", lastName: "Editor", email, password },
-  });
-  expect(response.ok()).toBeTruthy();
-  return response.json();
 }

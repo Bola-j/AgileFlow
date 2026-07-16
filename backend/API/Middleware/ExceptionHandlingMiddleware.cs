@@ -1,3 +1,4 @@
+using AgileFlow.Application.Exceptions;
 using Microsoft.IdentityModel.Tokens;
 
 namespace API.Middleware;
@@ -33,31 +34,53 @@ public class ExceptionHandlingMiddleware
                 throw;
             }
 
-            var (statusCode, message) = MapException(exception);
-
             _logger.LogError(
                 exception,
                 "Unhandled exception for {Method} {Path}. Returned {StatusCode}.",
                 context.Request.Method,
                 context.Request.Path,
-                statusCode);
+                MapStatusCode(exception));
 
             context.Response.Clear();
-            context.Response.StatusCode = statusCode;
-            await context.Response.WriteAsJsonAsync(new { message });
+            context.Response.StatusCode = MapStatusCode(exception);
+
+            // EmailNotVerifiedException gets an augmented body so the frontend can detect it
+            if (exception is EmailNotVerifiedException emailEx)
+            {
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    message = emailEx.Message,
+                    requiresEmailConfirmation = true,
+                    email = emailEx.Email,
+                });
+            }
+            else
+            {
+                await context.Response.WriteAsJsonAsync(new { message = MapMessage(exception) });
+            }
         }
     }
 
-    private static (int StatusCode, string Message) MapException(Exception exception)
+    private static int MapStatusCode(Exception exception) => exception switch
     {
-        return exception switch
-        {
-            KeyNotFoundException => (StatusCodes.Status404NotFound, exception.Message),
-            UnauthorizedAccessException => (StatusCodes.Status403Forbidden, exception.Message),
-            ArgumentException => (StatusCodes.Status400BadRequest, exception.Message),
-            InvalidOperationException => (StatusCodes.Status409Conflict, exception.Message),
-            SecurityTokenException => (StatusCodes.Status401Unauthorized, exception.Message),
-            _ => (StatusCodes.Status500InternalServerError, UnexpectedErrorMessage)
-        };
-    }
+        KeyNotFoundException        => StatusCodes.Status404NotFound,
+        EmailNotVerifiedException   => StatusCodes.Status403Forbidden,
+        UnauthorizedAccessException => StatusCodes.Status403Forbidden,
+        ArgumentException           => StatusCodes.Status400BadRequest,
+        InvalidOperationException   => StatusCodes.Status409Conflict,
+        SecurityTokenException      => StatusCodes.Status401Unauthorized,
+        _                           => StatusCodes.Status500InternalServerError,
+    };
+
+    private static string MapMessage(Exception exception) => exception switch
+    {
+        KeyNotFoundException        => exception.Message,
+        EmailNotVerifiedException   => exception.Message,
+        UnauthorizedAccessException => exception.Message,
+        ArgumentException           => exception.Message,
+        InvalidOperationException   => exception.Message,
+        SecurityTokenException      => exception.Message,
+        _                           => UnexpectedErrorMessage,
+    };
 }
+

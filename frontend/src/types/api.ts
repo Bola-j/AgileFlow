@@ -49,6 +49,23 @@ export interface AuthResponseDto {
   role: string;
 }
 
+export interface RegisterResponseDto {
+  userId: string;
+  email: string;
+  requiresEmailConfirmation: true;
+  message: string;
+}
+
+export interface ConfirmEmailResponseDto {
+  email: string;
+  confirmed: boolean;
+  message: string;
+}
+
+export interface ResendEmailConfirmationRequestDto {
+  email: string;
+}
+
 export interface AccountResponse {
   userId: string;
   firstName: string;
