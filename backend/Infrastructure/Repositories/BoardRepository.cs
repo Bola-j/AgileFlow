@@ -30,12 +30,6 @@ namespace Infrastructure.Repositories
                 .FirstOrDefaultAsync(b => b.ProjectId == projectId);
         }
 
-        public async Task AddAsync(Board board)
-        {
-            await _context.Boards.AddAsync(board);
-            await _context.SaveChangesAsync();
-        }
-
         public async Task<BoardColumn?> GetColumnByIdAsync(int columnId)
         {
             return await _context.BoardColumns

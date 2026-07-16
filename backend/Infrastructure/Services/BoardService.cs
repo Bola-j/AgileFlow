@@ -125,8 +125,7 @@ namespace Infrastructure.Services
             if(currentColumnsCount == 4)
                 throw new InvalidOperationException("A board can have at most 4 columns.");
 
-            var newColumn = new BoardColumn(request.ColumnName, board.Id);
-            newColumn.UpdatePosition(currentColumnsCount);
+            var newColumn = new BoardColumn(request.ColumnName, board.Id, currentColumnsCount);
             await _boardRepository.AddColumnAsync(newColumn);
         }
 

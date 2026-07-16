@@ -17,11 +17,16 @@ namespace AgileFlow.Domain.Entities
 
         private BoardColumn() { }
 
-        public BoardColumn(string name, int boardId)
+        public BoardColumn(string name, int boardId , int position)
         {
             Name = name;
             BoardId = boardId;
-            Position = 0;
+            Position = position;
+        }
+        public BoardColumn(string name, int position)
+        {
+            Name = name;
+            Position = position;
         }
 
         public void UpdateName(string name)
