@@ -279,6 +279,18 @@ erDiagram
     APP_USER ||--o{ NOTIFICATION : notifications
 ```
 
+#### Entity Relationship Diagram
+
+![Entity relationship diagram for the AgileFlow domain model](Diagrams/ERD.png)
+
+*Figure 1. Entity relationship diagram for the AgileFlow domain model.*
+
+#### Relational Schema
+
+![Relational schema for the AgileFlow domain model](Diagrams/Schema.png)
+
+*Figure 2. Relational schema for the AgileFlow domain model.*
+
 Main entities:
 
 | Entity | Purpose |
