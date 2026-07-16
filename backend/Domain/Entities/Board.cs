@@ -8,19 +8,14 @@ namespace AgileFlow.Domain.Entities
         public int ProjectId { get; private set; }
         public Project Project { get; private set; } = null!;
 
-        private Board() { }
-        public Board(int projectId)
-        {
-            //Name = name;
-            ProjectId = projectId;
-        }
+        public Board() { }
 
         //public void UpdateName(string name)
         //{
         //    Name = name;
         //    Update();
         //}
-        public ICollection<BoardColumn> BoardColumns { get; private set; } = new List<BoardColumn>();
+        public IList<BoardColumn> BoardColumns { get; private set; } = new List<BoardColumn>();
     }
 
 }

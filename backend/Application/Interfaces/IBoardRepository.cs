@@ -11,7 +11,6 @@ namespace Application.Interfaces
     {
         Task<Board?> GetByIdAsync(int boardId);
         Task<Board?> GetByProjectIdAsync(int projectId);
-        Task AddAsync(Board board);
         Task<BoardColumn?> GetColumnByIdAsync(int columnId);
         Task AddColumnAsync(BoardColumn column);
         Task UpdateColumnAsync(BoardColumn column);

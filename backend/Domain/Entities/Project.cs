@@ -26,8 +26,16 @@ namespace AgileFlow.Domain.Entities
             WorkspaceId = workspaceId;
             Description = description;
             EndDate = endDate;
+            CreateBoard();
         }
 
+        private void CreateBoard()
+        {
+            Board = new Board();
+            Board.BoardColumns.Add(new BoardColumn("To Do", 0));
+            Board.BoardColumns.Add(new BoardColumn("In Progress", 1));
+            Board.BoardColumns.Add(new BoardColumn("Done", 2));
+        }
         public void UpdateName(string name)
         {
             Name = name;
