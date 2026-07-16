@@ -20,6 +20,8 @@ internal class Program
 {
     private static void Main(string[] args)
     {
+        EnsureStaticAssetDirectoriesBeforeBuilder();
+
         var builder = WebApplication.CreateBuilder(args);
 
         // ── MVC + Swagger ─────────────────────────────────────────────────────────────
@@ -186,5 +188,34 @@ internal class Program
             app.Environment.WebRootPath,
             "uploads",
             "profile-pictures"));
+    }
+
+    private static void EnsureStaticAssetDirectoriesBeforeBuilder()
+    {
+        var contentRoot = ResolveApiContentRoot();
+        Directory.CreateDirectory(Path.Combine(contentRoot, "wwwroot"));
+        Directory.CreateDirectory(Path.Combine(contentRoot, "wwwroot", "uploads", "profile-pictures"));
+    }
+
+    private static string ResolveApiContentRoot()
+    {
+        var currentDirectory = Directory.GetCurrentDirectory();
+        if (File.Exists(Path.Combine(currentDirectory, "API.csproj")))
+            return currentDirectory;
+
+        var nestedApiDirectory = Path.Combine(currentDirectory, "API");
+        if (File.Exists(Path.Combine(nestedApiDirectory, "API.csproj")))
+            return nestedApiDirectory;
+
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "API.csproj")))
+                return directory.FullName;
+
+            directory = directory.Parent;
+        }
+
+        return currentDirectory;
     }
 }
