@@ -16,6 +16,7 @@ import { Field, Input, Textarea } from "@/components/ui/forms";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/state";
 import { routes } from "@/constants/routes";
 import { workspaceApi } from "@/features/workspace/api/workspaceApi";
+import { isWorkspaceManager } from "@/features/workspace/utils/permissions";
 import { formatDate } from "@/lib/utils";
 import { getErrorMessage } from "@/services/apiClient";
 import { queryKeys } from "@/utils/queryKeys";
@@ -75,7 +76,7 @@ export function WorkspacesPage() {
               </div>
               <div className="flex justify-between gap-2">
                 <Button asChild variant="outline"><Link to={routes.workspace(workspace.id)}>Open</Link></Button>
-                <Button size="icon" variant="ghost" onClick={() => setDeleteId(workspace.id)} aria-label="Delete workspace"><Trash2 className="h-4 w-4" /></Button>
+                {isWorkspaceManager(workspace.currentUserRole) ? <Button size="icon" variant="ghost" onClick={() => setDeleteId(workspace.id)} aria-label="Delete workspace"><Trash2 className="h-4 w-4" /></Button> : null}
               </div>
             </CardContent>
           </Card>

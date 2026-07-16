@@ -70,6 +70,7 @@ namespace Application.DTOs.Workspace
         public DateTime CreatedAt { get; set; }
         public int ProjectCount { get; set; }
         public int MemberCount { get; set; }
+        public string CurrentUserRole { get; set; } = string.Empty;
     }
 
     public class UpdateWorkspaceMemberRoleRequest

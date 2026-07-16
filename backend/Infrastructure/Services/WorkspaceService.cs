@@ -12,6 +12,7 @@ namespace Infrastructure.Services
     public class WorkspaceService : IWorkspaceService
     {
         private static readonly UserRole[] WorkspaceManagerRoles = { UserRole.Admin, UserRole.TeamLead };
+        private static readonly UserRole[] WorkspaceAdminRoles = { UserRole.Admin };
 
         private readonly IWorkspaceRepository _workspaceRepository;
         private readonly IUserWorkspaceRepository _userWorkspaceRepository;
@@ -42,7 +43,17 @@ namespace Infrastructure.Services
         public async Task<IEnumerable<WorkspaceSummaryResponse>> GetMyWorkspacesAsync(string userId)
         {
             var workspaces = await _workspaceRepository.GetByUserIdAsync(userId);
-            return _mapper.Map<IEnumerable<WorkspaceSummaryResponse>>(workspaces);
+            var responses = _mapper.Map<List<WorkspaceSummaryResponse>>(workspaces);
+            foreach (var response in responses)
+            {
+                var workspace = workspaces.First(workspace => workspace.Id == response.Id);
+                response.CurrentUserRole = workspace.UserWorkspaces
+                    .First(uw => uw.AppUserId == userId && !uw.IsDeleted)
+                    .Role
+                    .ToString();
+            }
+
+            return responses;
         }
 
         public async Task<WorkspaceResponse?> GetByIdAsync(int id, string userId)
@@ -107,7 +118,7 @@ namespace Infrastructure.Services
 
         public async Task AddMemberAsync(int workspaceId, AddWorkspaceMemberRequest request, string currentUserId)
         {
-            await _authorizationService.EnsureRoleAsync(workspaceId, currentUserId, WorkspaceManagerRoles);
+            await _authorizationService.EnsureRoleAsync(workspaceId, currentUserId, WorkspaceAdminRoles);
             var targetUser = await ResolveUserAsync(request.Email, request.UserId);
             if (targetUser is null)
                 throw new KeyNotFoundException($"User with email '{request.Email}' does not exist in the system.");
@@ -134,7 +145,7 @@ namespace Infrastructure.Services
 
         public async Task UpdateMemberRoleAsync(int workspaceId, string memberUserId, UpdateWorkspaceMemberRoleRequest request, string currentUserId)
         {
-            await _authorizationService.EnsureRoleAsync(workspaceId, currentUserId, WorkspaceManagerRoles);
+            await _authorizationService.EnsureRoleAsync(workspaceId, currentUserId, WorkspaceAdminRoles);
 
             var membership = await _userWorkspaceRepository.GetMembershipAsync(workspaceId, memberUserId);
             if (membership is null || membership.IsDeleted)
@@ -156,7 +167,7 @@ namespace Infrastructure.Services
 
         public async Task RemoveMemberAsync(int workspaceId, string memberUserId, string currentUserId)
         {
-            await _authorizationService.EnsureRoleAsync(workspaceId, currentUserId, WorkspaceManagerRoles);
+            await _authorizationService.EnsureRoleAsync(workspaceId, currentUserId, WorkspaceAdminRoles);
             memberUserId = await ResolveUserIdAsync(memberUserId);
             if (memberUserId == currentUserId)
                 throw new InvalidOperationException("You cannot remove yourself from the workspace.");

@@ -14,8 +14,11 @@ import { Modal } from "@/components/ui/dialog";
 import { Field, Input, SelectInput, Textarea } from "@/components/ui/forms";
 import { ErrorState, Skeleton } from "@/components/ui/state";
 import { routes } from "@/constants/routes";
+import { accountApi } from "@/features/account/api/accountApi";
 import { projectsApi } from "@/features/projects/api/projectsApi";
 import { sprintsApi } from "@/features/sprints/api/sprintsApi";
+import { workspaceApi } from "@/features/workspace/api/workspaceApi";
+import { getCurrentWorkspaceMember, isWorkspaceManager } from "@/features/workspace/utils/permissions";
 import { formatDate } from "@/lib/utils";
 import { getErrorMessage } from "@/services/apiClient";
 import { ProjectStatus } from "@/types/api";
@@ -31,6 +34,8 @@ export function ProjectDetailsPage() {
   const [sprintOpen, setSprintOpen] = useState(false);
   const project = useQuery({ queryKey: queryKeys.project(projectId), queryFn: () => projectsApi.get(projectId), enabled: Number.isFinite(projectId) });
   const sprints = useQuery({ queryKey: queryKeys.sprints(projectId), queryFn: () => sprintsApi.byProject(projectId), enabled: Number.isFinite(projectId) });
+  const workspace = useQuery({ queryKey: project.data ? queryKeys.workspace(project.data.workspaceId) : ["workspace", "none"], queryFn: () => workspaceApi.get(project.data?.workspaceId ?? 0), enabled: Boolean(project.data?.workspaceId) });
+  const account = useQuery({ queryKey: queryKeys.account, queryFn: accountApi.me });
   const projectForm = useForm<z.infer<typeof projectSchema>>({ resolver: zodResolver(projectSchema), values: { name: project.data?.name ?? "", description: project.data?.description ?? "", status: statusValue(project.data?.status), endDate: project.data?.endDate?.slice(0, 10) ?? "" } });
   const sprintForm = useForm<z.infer<typeof sprintSchema>>({ resolver: zodResolver(sprintSchema), defaultValues: { name: "", goal: "", startDate: new Date().toISOString().slice(0, 10), endDate: "" } });
   const updateProject = useMutation({ mutationFn: (values: z.infer<typeof projectSchema>) => projectsApi.update(projectId, { ...values, status: values.status as 0 | 1 | 2 | 3 }), onSuccess: async () => { await queryClient.invalidateQueries({ queryKey: queryKeys.project(projectId) }); setProjectOpen(false); toast.success("Project updated."); }, onError: (error) => toast.error(getErrorMessage(error)) });
@@ -40,10 +45,12 @@ export function ProjectDetailsPage() {
   if (project.isError || !project.data) return <ErrorState onRetry={() => void project.refetch()} />;
 
   const activeSprint = sprints.data?.find((sprint) => sprint.status === "Active") ?? sprints.data?.[0];
+  const currentMember = getCurrentWorkspaceMember(workspace.data, account.data);
+  const canManageProject = isWorkspaceManager(currentMember?.role);
 
   return (
     <>
-      <PageHeader title={project.data.name} description={project.data.description || "Project details"} actions={<><Button variant="outline" onClick={() => setProjectOpen(true)}><Pencil className="h-4 w-4" />Edit</Button>{activeSprint ? <Button asChild><Link to={routes.sprint(activeSprint.id)}><KanbanSquare className="h-4 w-4" />Active sprint</Link></Button> : null}<Button onClick={() => setSprintOpen(true)}><Plus className="h-4 w-4" />Sprint</Button></>} />
+      <PageHeader title={project.data.name} description={project.data.description || "Project details"} actions={<>{canManageProject ? <Button variant="outline" onClick={() => setProjectOpen(true)}><Pencil className="h-4 w-4" />Edit</Button> : null}{activeSprint ? <Button asChild><Link to={routes.sprint(activeSprint.id)}><KanbanSquare className="h-4 w-4" />Active sprint</Link></Button> : null}{canManageProject ? <Button onClick={() => setSprintOpen(true)}><Plus className="h-4 w-4" />Sprint</Button> : null}</>} />
       <div className="mb-6 grid gap-4 md:grid-cols-3">
         <Card><CardHeader><CardTitle>Status</CardTitle></CardHeader><CardContent><Badge value={project.data.status} /></CardContent></Card>
         <Card><CardHeader><CardTitle>Timeline</CardTitle></CardHeader><CardContent className="flex items-center gap-2 text-sm"><Calendar className="h-4 w-4" />{formatDate(project.data.startDate)} - {formatDate(project.data.endDate)}</CardContent></Card>

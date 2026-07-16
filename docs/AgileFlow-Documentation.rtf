@@ -1,0 +1,202 @@
+{\rtf1\ansi\deff0{\fonttbl{\f0 Calibri;}}\fs22 AgileFlow Project Documentation\par
+Generated: 2026-07-16 05:04\par
+\par
+# AgileFlow\par
+\par
+AgileFlow is an Agile project management platform for workspace-based teams. It supports authenticated workspaces, projects, sprints, Kanban boards, task assignment, dependency tracking, submit/review approval flow, dashboard summaries, account profiles, email verification, and workflow email notifications.\par
+\par
+The current application is a .NET 8 API backend with a React 19 + TypeScript + Vite frontend. The backend owns the business rules for workspace roles, task approval, dependency validation, sprint completion, email audit logs, and database migrations.\par
+\par
+## Main Features\par
+\par
+- JWT authentication with refresh tokens and email verification.\par
+- Account profile editing and upload-only profile pictures.\par
+- Workspace, member, project, sprint, board, and task management.\par
+- Role-based permissions:\par
+  - Admin: member management plus delivery management.\par
+  - TeamLead: project, sprint, board, task, assignment, dependency, and review management.\par
+  - Developer: assigned task editing and submit-for-review.\par
+- Task lifecycle with commit submission, approval/rejection comments, dependency gates, and activity logs.\par
+- Sprint progress and dashboard aggregate APIs.\par
+- SMTP-backed email notifications with audited delivery logs and due-date reminders.\par
+- React dashboard UI with TanStack Query, Axios, React Hook Form, Zod, dnd-kit, Recharts, and Tailwind.\par
+- Postman/Newman and Playwright workflow coverage.\par
+\par
+## Repository Structure\par
+\par
+```text\par
+backend/\par
+  API/              ASP.NET Core controllers, middleware, startup, auth, static upload serving\par
+  Application/      DTOs, interfaces, mapping profiles, service contracts\par
+  Domain/           Entities, enums, domain state\par
+  Infrastructure/   EF Core DbContext, migrations, repositories, services, email worker\par
+  Tests/            Backend test project\par
+\par
+frontend/\par
+  src/app/          Providers and route composition\par
+  src/features/     Feature modules for auth, workspace, projects, board, tasks, sprints, account\par
+  src/components/   Shared UI primitives and reusable app components\par
+  src/services/     Axios API client and cross-feature API helpers\par
+\par
+postman/            API workflow collection and local environment\par
+tests/e2e/          Playwright E2E scenarios\par
+docs/               Architecture and project documentation\par
+```\par
+\par
+## Local Development\par
+\par
+Prerequisites:\par
+\par
+- .NET 8 SDK\par
+- Node.js 20+\par
+- SQL Server LocalDB or SQL Server\par
+- Optional: smtp4dev or another SMTP test inbox\par
+\par
+Backend:\par
+\par
+```powershell\par
+dotnet run --project backend/API/API.csproj\par
+```\par
+\par
+The API uses `backend/API/Properties/launchSettings.json` for local development defaults. Startup applies EF Core migrations automatically with `Database.Migrate()`.\par
+\par
+Frontend:\par
+\par
+```powershell\par
+cd frontend\par
+npm install\par
+npm run dev\par
+```\par
+\par
+The frontend defaults to `VITE_API_URL=http://localhost:6358` and runs on Vite at `http://127.0.0.1:5173`.\par
+\par
+Verification:\par
+\par
+```powershell\par
+dotnet build backend/AgileFlow.slnx -c Release\par
+cd frontend\par
+npm run lint -- --format stylish\par
+npm run build\par
+cd ..\par
+npm run postman:test\par
+npm run e2e\par
+```\par
+\par
+## Team Roles\par
+\par
+The roles below are tailored from repository history and the provided team names. Git evidence comes from local Git author names, commit subjects, and touched areas.\par
+\par
+| Team member | Git identity seen in history | Project role | Evidence from repository history |\par
+| --- | --- | --- | --- |\par
+| Bola Gerges Saeed Ghaly | `Bola Ghaly <bolagerges221@gmail.com>` | Team Lead, full-stack integration lead, backend workflow owner | Highest commit volume; solution setup, JWT auth, sprint/task services, workspace authorization, React frontend implementation, dashboard, Postman workflow coverage, Docker/E2E setup, task lifecycle hardening, merge/integration work. |\par
+| Fatma Mahmoud Abdelkader Elkassaby | `Fatma Elkassaby <fatemamahmoud2004@gmailcom>` | Backend domain and board/task workflow engineer | Initial domain entities and EF configurations; workspace membership; board and column management; task dependencies and activity logging; sprint-scoped board workflow. |\par
+| Youssef Amer Sayed Mostafa | `Youssef Amer <yousefamer771@gmail.com>`, `Youssef-Amer17 <yousefamer771@gmail.com>` | Authentication, profile, email verification/notification, and early frontend flow engineer | Initial HTML/JavaScript UI pages; login, registration, and profile management; email verification, SMTP notifications, email audit log, and due-date reminder worker. |\par
+| Yahia Hany Shaker Rezk | `Yahia Hany <yahyahany222@gmail.com>` | Workspace and project API contributor | Workspace and project backend slice including controllers, services, repositories, interfaces, and mapping profiles. |\par
+\par
+## Current Notes\par
+\par
+- Registering a user sends an email verification link and does not issue tokens until the account is confirmed.\par
+- Existing workflow rules are enforced server-side; frontend controls are convenience only and are not the source of authorization.\par
+- Sprint completion requires every task in the sprint to be `Done` and `Approved`.\par
+- Tasks can enter `Done` only after review approval and after dependencies are also done and approved.\par
+- Profile pictures are uploaded to the API and served from `/uploads/profile-pictures/...`; raw URL entry is intentionally not part of the profile flow.\par
+\par
+--- Architecture ---\par
+\par
+# AgileFlow Architecture\par
+\par
+AgileFlow is a layered monolithic application. The API, domain model, business services, repositories, and React frontend live in one repository, but responsibilities are separated by project and feature boundaries.\par
+\par
+## Backend Architecture\par
+\par
+The backend uses .NET 8, ASP.NET Core, Entity Framework Core, ASP.NET Identity, JWT authentication, and SQL Server.\par
+\par
+```text\par
+API -> Application -> Domain\par
+API -> Infrastructure -> Application -> Domain\par
+```\par
+\par
+- `backend/API`: controllers, middleware, dependency injection, authentication setup, CORS, Swagger, startup migrations, static upload serving, and hosted worker registration.\par
+- `backend/Application`: DTOs, service interfaces, repository interfaces, AutoMapper profiles, and contracts shared by API and Infrastructure.\par
+- `backend/Domain`: entities and enums such as workspace roles, sprint status, task status, task priority, approval status, commit status, and email event types.\par
+- `backend/Infrastructure`: EF Core persistence, migrations, repository implementations, business services, SMTP email delivery, notification audit logging, and due-date reminder background work.\par
+\par
+The API layer should stay thin. Business rules belong in services, especially:\par
+\par
+- `WorkspaceService` and `WorkspaceAuthorizationService` for workspace membership and role rules.\par
+- `ProjectService`, `SprintService`, and `TaskService` for delivery workflow rules.\par
+- `BoardService` for board and column rules.\par
+- `AuthService` and email services for verification, token, and notification workflows.\par
+\par
+## Frontend Architecture\par
+\par
+The frontend is a React 19 + TypeScript + Vite application using React Router v7, TanStack Query, Axios, React Hook Form, Zod, Tailwind, dnd-kit, Recharts, Framer Motion, Lucide icons, and shadcn-style UI primitives.\par
+\par
+Feature code is organized under `frontend/src/features`:\par
+\par
+- `auth`: login, register, refresh persistence, email verification, resend confirmation.\par
+- `workspace`: workspace list/details, member table, role-based controls.\par
+- `projects`: project list/details, project forms, sprint entry points.\par
+- `sprints`: sprint details, progress chart, start/complete actions, embedded board.\par
+- `board`: Kanban columns, task cards, column ordering, task movement.\par
+- `tasks`: task detail modal, edit, submit/review, assignees, dependencies, activity logs.\par
+- `account`: current-user profile and profile-picture upload.\par
+\par
+Frontend role checks only control visibility and ergonomics. Backend authorization remains the source of truth.\par
+\par
+## Authorization Model\par
+\par
+Workspace role controls all inner workspace operations:\par
+\par
+| Capability | Admin | TeamLead | Developer |\par
+| --- | --- | --- | --- |\par
+| Add/remove members | Yes | No | No |\par
+| Change member roles | Yes | No | No |\par
+| Edit workspace details | Yes | Yes | No |\par
+| Project CRUD | Yes | Yes | No |\par
+| Sprint CRUD/start/complete | Yes | Yes | No |\par
+| Board column CRUD/order | Yes | Yes | No |\par
+| Task create/delete/move/status | Yes | Yes | No |\par
+| Assign/unassign task users | Yes | Yes | No |\par
+| Add/remove task dependencies | Yes | Yes | No |\par
+| Approve/reject task review | Yes | Yes | No |\par
+| Edit assigned task fields | Yes, if assigned or manager | Yes, if assigned or manager | Yes, if assigned |\par
+| Submit assigned task for review | Yes, if assigned | Yes, if assigned | Yes, if assigned |\par
+\par
+The workspace creator remains an Admin and cannot be demoted or removed.\par
+\par
+## Task Lifecycle\par
+\par
+Tasks combine status, approval, commits, dependencies, and activity logs into one workflow:\par
+\par
+1. Admin or TeamLead creates and assigns tasks.\par
+2. Assigned users can edit allowed fields and submit with a commit hash.\par
+3. Submit sets approval to `Pending` and creates a pending commit record.\par
+4. Admin or TeamLead reviews with a required comment.\par
+5. Approval marks the commit as merged and the task as `Done` only when dependencies are also `Done` and `Approved`.\par
+6. Rejection records the comment, marks the commit rejected, and keeps task data and assignees intact.\par
+7. Sprint completion is blocked until every task is `Done` and `Approved`.\par
+\par
+## Email and Notifications\par
+\par
+Email delivery is isolated behind application interfaces and implemented in Infrastructure with SMTP.\par
+\par
+- Registration sends an email confirmation link and blocks login until confirmation.\par
+- Workspace membership, task assignment, task submission, review decisions, and due-date reminders can send emails.\par
+- `EmailNotificationLogs` stores audit and deduplication data.\par
+- Email failures are logged and audited but do not roll back the original business action.\par
+\par
+## Persistence and Startup\par
+\par
+EF Core migrations define schema changes. The API applies migrations on startup using `Database.Migrate()`, so local development can create or update the database automatically when the configured SQL Server is available.\par
+\par
+Static profile-picture uploads are stored under `backend/API/wwwroot/uploads/profile-pictures/` and served by the API static-file middleware.\par
+\par
+## Team Responsibility Map\par
+\par
+Roles are inferred from local Git history and the names provided by the team lead:\par
+\par
+- Bola Gerges Saeed Ghaly: Team Lead and full-stack integration owner. Owns architecture coordination, backend workflow hardening, React migration, CI/workflow validation, and final merge decisions.\par
+- Fatma Mahmoud Abdelkader Elkassaby: Backend domain and workflow engineer. Owns core entities/configurations, board services, task dependencies, activity logs, and sprint-board workflow.\par
+- Youssef Amer Sayed Mostafa: Auth, profile, email, and early frontend workflow engineer. Owns authentication/profile flows, email verification, SMTP notification/audit flow, and initial static UI prototypes.\par
+- Yahia Hany Shaker Rezk: Workspace/project backend contributor. Owns early workspace and project controllers, services, repositories, interfaces, and mappings.\par}

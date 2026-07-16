@@ -135,6 +135,7 @@ export interface WorkspaceSummaryResponse {
   createdAt: string;
   projectCount: number;
   memberCount: number;
+  currentUserRole: string;
 }
 
 export interface UpdateWorkspaceMemberRoleRequest {

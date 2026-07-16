@@ -15,11 +15,13 @@ import { Modal } from "@/components/ui/dialog";
 import { Field, Input, Textarea } from "@/components/ui/forms";
 import { ErrorState, Skeleton } from "@/components/ui/state";
 import { routes } from "@/constants/routes";
+import { accountApi } from "@/features/account/api/accountApi";
 import { BoardContent } from "@/features/board/pages/BoardPage";
 import { projectsApi } from "@/features/projects/api/projectsApi";
 import { sprintsApi } from "@/features/sprints/api/sprintsApi";
 import { tasksApi } from "@/features/tasks/api/tasksApi";
 import { workspaceApi } from "@/features/workspace/api/workspaceApi";
+import { getCurrentWorkspaceMember, isWorkspaceManager } from "@/features/workspace/utils/permissions";
 import { formatDate } from "@/lib/utils";
 import { getErrorMessage } from "@/services/apiClient";
 import { queryKeys } from "@/utils/queryKeys";
@@ -33,6 +35,7 @@ export function SprintDetailsPage() {
   const sprint = useQuery({ queryKey: queryKeys.sprint(sprintId), queryFn: () => sprintsApi.get(sprintId), enabled: Number.isFinite(sprintId) });
   const project = useQuery({ queryKey: sprint.data ? queryKeys.project(sprint.data.projectId) : ["project", "none"], queryFn: () => projectsApi.get(sprint.data?.projectId ?? 0), enabled: Boolean(sprint.data?.projectId) });
   const workspace = useQuery({ queryKey: project.data ? queryKeys.workspace(project.data.workspaceId) : ["workspace", "none"], queryFn: () => workspaceApi.get(project.data?.workspaceId ?? 0), enabled: Boolean(project.data?.workspaceId) });
+  const account = useQuery({ queryKey: queryKeys.account, queryFn: accountApi.me });
   const progress = useQuery({ queryKey: queryKeys.sprintProgress(sprintId), queryFn: () => sprintsApi.progress(sprintId), enabled: Number.isFinite(sprintId) });
   const tasks = useQuery({ queryKey: queryKeys.tasks(sprintId), queryFn: () => tasksApi.bySprint(sprintId), enabled: Number.isFinite(sprintId) });
   const form = useForm<z.infer<typeof schema>>({ resolver: zodResolver(schema), values: { name: sprint.data?.name ?? "", goal: sprint.data?.goal ?? "", endDate: sprint.data?.endDate?.slice(0, 10) ?? "" } });
@@ -48,6 +51,8 @@ export function SprintDetailsPage() {
     { name: "Done", value: progress.data?.completedTasks ?? 0 },
     { name: "Remaining", value: Math.max((progress.data?.totalTasks ?? 0) - (progress.data?.completedTasks ?? 0), 0) },
   ];
+  const currentMember = getCurrentWorkspaceMember(workspace.data, account.data);
+  const canManageSprint = isWorkspaceManager(currentMember?.role);
 
   return (
     <>
@@ -58,7 +63,7 @@ export function SprintDetailsPage() {
         <span>/</span>
         <Link className="font-medium text-foreground hover:text-primary" to={routes.sprint(sprint.data.id)}>{sprint.data.name}</Link>
       </nav>
-      <PageHeader title={sprint.data.name} description={sprint.data.goal} actions={<><Button variant="outline" onClick={() => setEditOpen(true)}><Pencil className="h-4 w-4" />Edit</Button><Button variant="secondary" onClick={() => start.mutate()} disabled={start.isPending}><PlayCircle className="h-4 w-4" />Start</Button><Button onClick={() => complete.mutate()} disabled={complete.isPending}><CheckCircle2 className="h-4 w-4" />Complete</Button></>} />
+      <PageHeader title={sprint.data.name} description={sprint.data.goal} actions={canManageSprint ? <><Button variant="outline" onClick={() => setEditOpen(true)}><Pencil className="h-4 w-4" />Edit</Button><Button variant="secondary" onClick={() => start.mutate()} disabled={start.isPending}><PlayCircle className="h-4 w-4" />Start</Button><Button onClick={() => complete.mutate()} disabled={complete.isPending}><CheckCircle2 className="h-4 w-4" />Complete</Button></> : null} />
       <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
         <Card><CardHeader><CardTitle>Progress</CardTitle><CardDescription>{progress.data?.progressPercentage ?? 0}% complete</CardDescription></CardHeader><CardContent><div className="h-64"><ResponsiveContainer><PieChart><Pie data={chartData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90}><Cell fill="#0f766e" /><Cell fill="#f59e0b" /></Pie><Tooltip /></PieChart></ResponsiveContainer></div></CardContent></Card>
         <Card><CardHeader><CardTitle>Details</CardTitle></CardHeader><CardContent className="grid gap-3 text-sm"><p><Badge value={sprint.data.status} /></p><p>{formatDate(sprint.data.startDate)} - {formatDate(sprint.data.endDate)}</p><p>{tasks.data?.length ?? sprint.data.taskCount} tasks loaded from backend</p></CardContent></Card>

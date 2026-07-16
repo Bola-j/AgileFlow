@@ -15,7 +15,9 @@ import { ConfirmDialog, Modal } from "@/components/ui/dialog";
 import { Field, Input, SelectInput, Textarea } from "@/components/ui/forms";
 import { Table, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/state";
+import { accountApi } from "@/features/account/api/accountApi";
 import { workspaceApi } from "@/features/workspace/api/workspaceApi";
+import { getCurrentWorkspaceMember, isWorkspaceAdmin, isWorkspaceManager } from "@/features/workspace/utils/permissions";
 import { formatDate } from "@/lib/utils";
 import { getErrorMessage } from "@/services/apiClient";
 import { UserRole } from "@/types/api";
@@ -32,6 +34,7 @@ export function WorkspaceDetailsPage() {
   const [memberOpen, setMemberOpen] = useState(false);
   const [removeMemberEmail, setRemoveMemberEmail] = useState<string | null>(null);
   const workspace = useQuery({ queryKey: queryKeys.workspace(workspaceId), queryFn: () => workspaceApi.get(workspaceId), enabled: Number.isFinite(workspaceId) });
+  const account = useQuery({ queryKey: queryKeys.account, queryFn: accountApi.me });
   const workspaceForm = useForm<z.infer<typeof workspaceSchema>>({ resolver: zodResolver(workspaceSchema), values: { name: workspace.data?.name ?? "", description: workspace.data?.description ?? "" } });
   const memberForm = useForm<z.infer<typeof memberSchema>>({ resolver: zodResolver(memberSchema), defaultValues: { email: "", role: UserRole.Developer } });
 
@@ -46,13 +49,16 @@ export function WorkspaceDetailsPage() {
     () => [...(workspace.data?.members ?? [])].sort((first, second) => new Date(first.joinedAt).getTime() - new Date(second.joinedAt).getTime())[0]?.userId,
     [workspace.data?.members],
   );
+  const currentMember = getCurrentWorkspaceMember(workspace.data, account.data);
+  const canManageWorkspace = isWorkspaceManager(currentMember?.role);
+  const canManageMembers = isWorkspaceAdmin(currentMember?.role);
 
   if (workspace.isLoading) return <Skeleton className="h-96" />;
   if (workspace.isError || !workspace.data) return <ErrorState onRetry={() => void workspace.refetch()} />;
 
   return (
     <>
-      <PageHeader title={workspace.data.name} description={workspace.data.description || "Workspace details"} actions={<><Button variant="outline" onClick={() => setEditOpen(true)}><Pencil className="h-4 w-4" />Edit</Button><Button onClick={() => setMemberOpen(true)}><Plus className="h-4 w-4" />Add member</Button><Button asChild variant="secondary"><Link to={`/workspaces/${workspaceId}/projects`}>Projects</Link></Button></>} />
+      <PageHeader title={workspace.data.name} description={workspace.data.description || "Workspace details"} actions={<>{canManageWorkspace ? <Button variant="outline" onClick={() => setEditOpen(true)}><Pencil className="h-4 w-4" />Edit</Button> : null}{canManageMembers ? <Button onClick={() => setMemberOpen(true)}><Plus className="h-4 w-4" />Add member</Button> : null}<Button asChild variant="secondary"><Link to={`/workspaces/${workspaceId}/projects`}>Projects</Link></Button></>} />
       <div className="grid gap-4 lg:grid-cols-[1fr_2fr]">
         <Card><CardHeader><CardTitle>Summary</CardTitle></CardHeader><CardContent className="grid gap-2 text-sm"><p>Created {formatDate(workspace.data.createdAt)}</p><p>{workspace.data.projects.length} projects</p><p>{workspace.data.members.length} members</p></CardContent></Card>
         <Card>
@@ -65,8 +71,8 @@ export function WorkspaceDetailsPage() {
                   {members.map((member) => (
                     <TableRow key={member.userId}>
                       <TableCell><div className="flex items-center gap-3"><UserAvatar className="h-9 w-9" src={member.profilePicture} name={member.fullName} email={member.email} /><span>{member.fullName || member.email}</span></div></TableCell><TableCell>{member.email}</TableCell>
-                      <TableCell><SelectInput disabled={member.userId === creatorUserId} value={String(member.userId === creatorUserId ? UserRole.Admin : roleValue(member.role))} onChange={(event) => updateRole.mutate({ userId: member.userId, role: Number(event.target.value) as 0 | 1 | 2 })}><option value={UserRole.Developer}>Developer</option><option value={UserRole.TeamLead}>Team Lead</option><option value={UserRole.Admin}>Admin</option></SelectInput></TableCell>
-                      <TableCell className="text-right"><Button size="icon" variant="ghost" disabled={member.userId === creatorUserId} onClick={() => setRemoveMemberEmail(member.email)}><UserMinus className="h-4 w-4" /></Button></TableCell>
+                      <TableCell>{canManageMembers ? <SelectInput disabled={member.userId === creatorUserId} value={String(member.userId === creatorUserId ? UserRole.Admin : roleValue(member.role))} onChange={(event) => updateRole.mutate({ userId: member.userId, role: Number(event.target.value) as 0 | 1 | 2 })}><option value={UserRole.Developer}>Developer</option><option value={UserRole.TeamLead}>Team Lead</option><option value={UserRole.Admin}>Admin</option></SelectInput> : <span className="text-sm">{member.role}</span>}</TableCell>
+                      <TableCell className="text-right">{canManageMembers ? <Button size="icon" variant="ghost" disabled={member.userId === creatorUserId} onClick={() => setRemoveMemberEmail(member.email)}><UserMinus className="h-4 w-4" /></Button> : null}</TableCell>
                     </TableRow>
                   ))}
                 </tbody></Table>

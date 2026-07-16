@@ -60,9 +60,19 @@ public class DashboardService : IDashboardService
             .OrderByDescending(task => task.CreatedAt)
             .ToListAsync();
 
+        var workspaceSummaries = _mapper.Map<List<WorkspaceSummaryResponse>>(workspaces);
+        foreach (var summary in workspaceSummaries)
+        {
+            var workspace = workspaces.First(workspace => workspace.Id == summary.Id);
+            summary.CurrentUserRole = workspace.UserWorkspaces
+                .First(member => member.AppUserId == userId && !member.IsDeleted)
+                .Role
+                .ToString();
+        }
+
         return new DashboardSummaryResponse
         {
-            Workspaces = _mapper.Map<List<WorkspaceSummaryResponse>>(workspaces),
+            Workspaces = workspaceSummaries,
             Projects = _mapper.Map<List<ProjectResponse>>(projects),
             Sprints = _mapper.Map<List<SprintResponse>>(sprints),
             Tasks = _mapper.Map<List<TaskSummaryResponse>>(tasks),
