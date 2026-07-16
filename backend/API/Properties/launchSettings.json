@@ -12,7 +12,15 @@
         "Jwt__Issuer": "AgileFlow",
         "Jwt__Audience": "AgileFlow.Client",
         "Jwt__Key": "AgileFlowDevelopmentJwtKey1234567890!",
-        "Jwt__ExpiryMinutes": "60"
+        "Jwt__ExpiryMinutes": "60",
+        "Email__Smtp__Host": "localhost",
+        "Email__Smtp__Port": "2525",
+        "Email__Smtp__UseSsl": "false",
+        "Email__Smtp__Username": "",
+        "Email__Smtp__Password": "",
+        "Email__Smtp__FromEmail": "no-reply@agileflow.local",
+        "Email__Smtp__FromName": "AgileFlow",
+        "Email__Smtp__FrontendBaseUrl": "http://127.0.0.1:5173"
       }
     },
     "https": {
@@ -26,7 +34,15 @@
         "Jwt__Issuer": "AgileFlow",
         "Jwt__Audience": "AgileFlow.Client",
         "Jwt__Key": "AgileFlowDevelopmentJwtKey1234567890!",
-        "Jwt__ExpiryMinutes": "60"
+        "Jwt__ExpiryMinutes": "60",
+        "Email__Smtp__Host": "localhost",
+        "Email__Smtp__Port": "2525",
+        "Email__Smtp__UseSsl": "false",
+        "Email__Smtp__Username": "",
+        "Email__Smtp__Password": "",
+        "Email__Smtp__FromEmail": "no-reply@agileflow.local",
+        "Email__Smtp__FromName": "AgileFlow",
+        "Email__Smtp__FrontendBaseUrl": "http://127.0.0.1:5173"
       }
     }
   }
