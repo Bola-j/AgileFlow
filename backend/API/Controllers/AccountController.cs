@@ -46,8 +46,9 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost("me/profile-picture")]
+    [Consumes("multipart/form-data")]
     [RequestSizeLimit(5_242_880)]
-    public async Task<ActionResult<AccountResponse>> UploadProfilePicture([FromForm] IFormFile file)
+    public async Task<ActionResult<AccountResponse>> UploadProfilePicture(IFormFile file)
     {
         if (file is null || file.Length == 0)
             return BadRequest(new { message = "Profile picture file is required." });

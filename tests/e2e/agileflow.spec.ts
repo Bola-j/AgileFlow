@@ -15,7 +15,7 @@ test("@editing user profile edit persists", async ({ page }) => {
 
   await page.goto("/login");
   await page.getByLabel("Email").fill(confirmedEmail!);
-  await page.getByLabel("Password").fill(confirmedPassword);
+  await page.locator('input[name="password"]').fill(confirmedPassword);
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
 
