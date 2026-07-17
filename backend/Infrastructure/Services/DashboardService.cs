@@ -83,9 +83,16 @@ public class DashboardService : IDashboardService
 
     public async Task<List<MyTaskResponse>> GetMyTasksAsync(string userId)
     {
+        var assignedTaskIds = await _context.UserTasks
+            .Where(assignment => !assignment.IsDeleted && assignment.AppUserId == userId)
+            .Select(assignment => assignment.ProjectTaskId)
+            .ToListAsync();
+
         var tasks = await _context.ProjectTasks
             .Where(task => !task.IsDeleted &&
-                           task.UserTasks.Any(assignment => !assignment.IsDeleted && assignment.AppUserId == userId))
+                           assignedTaskIds.Contains(task.Id) &&
+                           !(task.Status == Domain.Enums.ProjectTaskStatus.Done &&
+                             task.ApprovalStatus == Domain.Enums.ProjectTaskApprovalStatus.Approved))
             .Include(task => task.UserTasks.Where(assignment => !assignment.IsDeleted))
                 .ThenInclude(assignment => assignment.AppUser)
             .Include(task => task.Sprint)

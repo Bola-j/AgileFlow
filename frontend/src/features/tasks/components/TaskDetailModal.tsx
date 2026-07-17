@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Link2, Send, UserPlus, X } from "lucide-react";
+import { CheckCircle2, GitCommit, History, Link2, MessageSquareText, Send, UserPlus, X } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -151,15 +151,41 @@ export function TaskDetailModal({
             ) : null}
           </section>
           <section className="grid gap-3">
-            <h3 className="text-sm font-semibold">Commits and review comments</h3>
+            <h3 className="flex items-center gap-2 text-sm font-semibold"><GitCommit className="h-4 w-4" />Submissions</h3>
             <div className="grid gap-2">
-              {task.data.commits.map((commit) => <div key={commit.id} className="rounded-md border p-3 text-sm"><p className="font-medium">{commit.commitHash} <Badge value={commit.status} /></p><p className="text-muted-foreground">{commit.appUserName} at {formatDate(commit.createdAt)}</p></div>)}
-              {task.data.comments.map((comment) => <div key={comment.id} className="rounded-md border p-3 text-sm"><p className="font-medium">{comment.content}</p><p className="text-muted-foreground">{comment.appUserName} at {formatDate(comment.createdAt)}</p></div>)}
+              {task.data.commits.length ? task.data.commits.map((commit) => (
+                <div key={commit.id} className="grid gap-1 rounded-md border p-3 text-sm">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono font-medium">{commit.commitHash}</span>
+                    <Badge value={commit.status} />
+                  </div>
+                  <p className="text-muted-foreground">{commit.appUserName} submitted at {formatDate(commit.createdAt)}</p>
+                </div>
+              )) : <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">No submissions yet.</p>}
             </div>
           </section>
           <section className="grid gap-3">
-            <h3 className="text-sm font-semibold">Activity timeline</h3>
-            <div className="grid gap-2">{(activity.data ?? []).map((log) => <div key={log.id} className="rounded-md border p-3 text-sm"><p className="font-medium">{log.fieldChanged}: {log.oldValue || "empty"} {"->"} {log.newValue || "empty"}</p><p className="text-muted-foreground">{log.appUserName} at {formatDate(log.createdAt)}</p></div>)}</div>
+            <h3 className="flex items-center gap-2 text-sm font-semibold"><MessageSquareText className="h-4 w-4" />Review comments</h3>
+            <div className="grid gap-2">
+              {task.data.comments.length ? task.data.comments.map((comment) => (
+                <div key={comment.id} className="grid gap-1 rounded-md border p-3 text-sm">
+                  <p className="font-medium">{comment.content}</p>
+                  <p className="text-muted-foreground">{comment.appUserName} commented at {formatDate(comment.createdAt)}</p>
+                </div>
+              )) : <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">No review comments yet.</p>}
+            </div>
+          </section>
+          <section className="grid gap-3">
+            <h3 className="flex items-center gap-2 text-sm font-semibold"><History className="h-4 w-4" />Activity timeline</h3>
+            <div className="grid gap-2">{(activity.data ?? []).map((log) => (
+              <div key={log.id} className="grid gap-1 rounded-md border p-3 text-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium">{formatActivityField(log.fieldChanged)}</span>
+                  <span className="text-muted-foreground">{formatActivityValue(log.oldValue)} {"->"} {formatActivityValue(log.newValue)}</span>
+                </div>
+                <p className="text-muted-foreground">{log.appUserName} at {formatDate(log.createdAt)}</p>
+              </div>
+            ))}</div>
           </section>
         </div>
       ) : null}
@@ -179,4 +205,20 @@ function priorityValue(priority: string): 0 | 1 | 2 | 3 {
   if (priority === "High") return ProjectTaskPriority.High;
   if (priority === "Critical") return ProjectTaskPriority.Critical;
   return ProjectTaskPriority.Medium;
+}
+
+function formatActivityField(field: string) {
+  const labels: Record<string, string> = {
+    ApprovalStatus: "Review status",
+    ColumnId: "Board column",
+    CommitSubmitted: "Submitted commit",
+    DependencyAdded: "Dependency added",
+    DependencyRemoved: "Dependency removed",
+    ReviewComment: "Review comment",
+  };
+  return labels[field] ?? field;
+}
+
+function formatActivityValue(value: string) {
+  return value || "empty";
 }

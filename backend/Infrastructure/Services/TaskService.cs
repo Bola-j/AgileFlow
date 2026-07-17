@@ -258,7 +258,7 @@ public class TaskService : ITaskService
         {
             task.UpdateStatus(ProjectTaskStatus.Done);
         }
-        else if (task.Status == ProjectTaskStatus.Done)
+        else if (task.Status != ProjectTaskStatus.InProgress)
         {
             task.UpdateStatus(ProjectTaskStatus.InProgress);
         }
