@@ -49,6 +49,7 @@ Current Onion implementation notes:
 
 - Registration with email-confirmation flow.
 - Confirmed-user login with JWT access and refresh tokens.
+- Google and GitHub OAuth sign-in with code exchange, callback validation, and JWT session issuance.
 - Refresh-token rotation and logout revocation.
 - Account profile read/update and profile-picture upload.
 - Workspace creation and workspace-scoped roles.
@@ -67,7 +68,6 @@ Current Onion implementation notes:
 
 Not implemented as complete features:
 
-- Google/GitHub third-party authentication. This piece is assigned to Moataz Hamdy (`M3tazz`) and is planned but not merged in the submitted repository snapshot.
 - GitHub commit verification or webhooks.
 - General threaded task discussion.
 - A user-facing in-app notification API or inbox.
@@ -153,6 +153,34 @@ npm run dev
 ```
 
 The frontend runs on `http://127.0.0.1:5173` and defaults to `http://localhost:6358` for API requests.
+
+### Google and GitHub sign-in
+
+Create OAuth applications in Google Cloud and GitHub, using these local authorization callback URLs:
+
+```text
+http://127.0.0.1:5173/auth/callback/google
+http://127.0.0.1:5173/auth/callback/github
+```
+
+Copy `frontend/.env.example` to `frontend/.env`, then set the public client IDs:
+
+```env
+VITE_GOOGLE_CLIENT_ID=your-google-client-id
+VITE_GITHUB_CLIENT_ID=your-github-client-id
+```
+
+Set the matching provider client IDs and secrets in the API's deployment configuration (`Google__ClientId`, `Google__ClientSecret`, `GitHub__ClientId`, and `GitHub__ClientSecret`). In production, replace the local callback URLs in `OAuth__AllowedRedirectUris__0` and `OAuth__AllowedRedirectUris__1` with your HTTPS frontend callback URLs, and register the exact same URLs with each provider.
+
+### Start the complete local stack
+
+With Docker Desktop running, start the API, frontend, and a local smtp4dev inbox together:
+
+```powershell
+.\scripts\run-local.ps1
+```
+
+The script starts the API and frontend in separate PowerShell windows and starts (or reuses) the `agileflow-smtp4dev` Docker container. Open smtp4dev at `http://localhost:3000` to inspect verification and notification emails. On a fresh checkout, the script installs frontend packages; use `-SkipInstall` to bypass that check.
 
 ## Docker Compose
 

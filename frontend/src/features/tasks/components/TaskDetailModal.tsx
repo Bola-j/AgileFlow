@@ -71,7 +71,7 @@ export function TaskDetailModal({
   const addDependency = useMutation({ mutationFn: (values: z.infer<typeof dependencySchema>) => tasksApi.addDependency(taskId ?? 0, values.dependencyTaskId), onSuccess: async () => { await invalidate(); dependencyForm.reset(); toast.success("Dependency added."); }, onError: (error) => toast.error(getErrorMessage(error)) });
   const removeDependency = useMutation({ mutationFn: (dependencyTaskId: number) => tasksApi.removeDependency(taskId ?? 0, dependencyTaskId), onSuccess: async () => { await invalidate(); toast.success("Dependency removed."); }, onError: (error) => toast.error(getErrorMessage(error)) });
   const isAssignedToMe = task.data?.assignees.some((assignee) => assignee.userId === account.data?.userId) ?? false;
-  const canEditTask = canManage || isAssignedToMe;
+  const canEditTask = canManage;
   const canReview = canManage && task.data?.approvalStatus === "Pending";
 
   return (

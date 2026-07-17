@@ -1,0 +1,253 @@
+{
+  "defaultPassword": "Pitch123!",
+  "workspace": {
+    "name": "AgileFlow Pitch Workspace",
+    "description": "Demo workspace for showing AgileFlow planning, sprint execution, review, and dashboard workflows."
+  },
+  "users": [
+    {
+      "key": "admin",
+      "firstName": "Amina",
+      "lastName": "Morgan",
+      "email": "pitch.admin@agileflow.local",
+      "githubUsername": "amina-morgan",
+      "identityRole": "Admin",
+      "workspaceRole": "Admin"
+    },
+    {
+      "key": "lead",
+      "firstName": "Omar",
+      "lastName": "Hassan",
+      "email": "pitch.lead@agileflow.local",
+      "githubUsername": "omar-hassan",
+      "identityRole": "TeamLead",
+      "workspaceRole": "TeamLead"
+    },
+    {
+      "key": "developer",
+      "firstName": "Maya",
+      "lastName": "Chen",
+      "email": "pitch.dev@agileflow.local",
+      "githubUsername": "maya-chen",
+      "identityRole": "Developer",
+      "workspaceRole": "Developer"
+    },
+    {
+      "key": "qa",
+      "firstName": "Leo",
+      "lastName": "Patel",
+      "email": "pitch.qa@agileflow.local",
+      "githubUsername": "leo-patel",
+      "identityRole": "Developer",
+      "workspaceRole": "Developer"
+    }
+  ],
+  "projects": [
+    {
+      "name": "Customer Portal Launch",
+      "description": "Ship the self-service customer portal for the investor pitch demo.",
+      "status": "InProgress",
+      "startDate": "2026-06-26T00:00:00Z",
+      "endDate": "2026-08-14T00:00:00Z",
+      "sprints": [
+        {
+          "key": "investor-demo",
+          "name": "Sprint 3 - Investor Demo",
+          "goal": "Make the product demo feel complete: auth, dashboard, board movement, and review flow.",
+          "status": "Active",
+          "startDate": "2026-07-13T00:00:00Z",
+          "endDate": "2026-07-27T00:00:00Z"
+        },
+        {
+          "key": "hardening",
+          "name": "Sprint 4 - Production Hardening",
+          "goal": "Tighten reporting, notifications, permissions, and deployment readiness.",
+          "status": "Planning",
+          "startDate": "2026-07-28T00:00:00Z",
+          "endDate": "2026-08-10T00:00:00Z"
+        }
+      ],
+      "tasks": [
+        {
+          "key": "github-oauth",
+          "sprintKey": "investor-demo",
+          "assigneeKey": "developer",
+          "column": "Done",
+          "title": "GitHub OAuth login and callback",
+          "description": "Users can choose GitHub, return to AgileFlow, and receive an AgileFlow JWT session.",
+          "status": "Done",
+          "priority": "Critical",
+          "approvalStatus": "Approved",
+          "dueDate": "2026-07-16T00:00:00Z"
+        },
+        {
+          "key": "dashboard-metrics",
+          "sprintKey": "investor-demo",
+          "assigneeKey": "lead",
+          "column": "In Progress",
+          "title": "Executive dashboard pitch metrics",
+          "description": "Show active projects, sprint workload, assigned tasks, and recent work for the signed-in user.",
+          "status": "InProgress",
+          "priority": "High",
+          "approvalStatus": "Pending",
+          "dueDate": "2026-07-20T00:00:00Z"
+        },
+        {
+          "key": "kanban-polish",
+          "sprintKey": "investor-demo",
+          "assigneeKey": "developer",
+          "column": "In Progress",
+          "title": "Kanban drag-and-drop polish",
+          "description": "Make board movement reliable for demo scripts and repeated local testing.",
+          "status": "InProgress",
+          "priority": "High",
+          "approvalStatus": null,
+          "dueDate": "2026-07-22T00:00:00Z"
+        },
+        {
+          "key": "email-verification",
+          "sprintKey": "investor-demo",
+          "assigneeKey": "qa",
+          "column": "Done",
+          "title": "Email verification walkthrough",
+          "description": "Registration sends a verification email through smtp4dev and blocks login before confirmation.",
+          "status": "Done",
+          "priority": "Medium",
+          "approvalStatus": "Approved",
+          "dueDate": "2026-07-15T00:00:00Z"
+        },
+        {
+          "key": "role-story",
+          "sprintKey": "investor-demo",
+          "assigneeKey": "admin",
+          "column": "To Do",
+          "title": "Workspace role management story",
+          "description": "Demonstrate Admin, TeamLead, and Developer access across the same workspace.",
+          "status": "Todo",
+          "priority": "Medium",
+          "approvalStatus": null,
+          "dueDate": "2026-07-25T00:00:00Z"
+        },
+        {
+          "key": "release-checklist",
+          "sprintKey": "hardening",
+          "assigneeKey": "lead",
+          "column": "To Do",
+          "title": "Release readiness checklist",
+          "description": "Track final security, logging, deployment, and documentation checks before handoff.",
+          "status": "Todo",
+          "priority": "Critical",
+          "approvalStatus": null,
+          "dueDate": "2026-07-31T00:00:00Z"
+        }
+      ],
+      "comments": [
+        {
+          "taskKey": "github-oauth",
+          "userKey": "lead",
+          "content": "OAuth callback now returns a clear error instead of spinning forever."
+        },
+        {
+          "taskKey": "dashboard-metrics",
+          "userKey": "admin",
+          "content": "Keep this dashboard path open during the pitch after sign-in."
+        },
+        {
+          "taskKey": "email-verification",
+          "userKey": "qa",
+          "content": "Verified with a fresh local database after migrations."
+        }
+      ],
+      "commits": [
+        {
+          "taskKey": "github-oauth",
+          "userKey": "developer",
+          "message": "Implement external auth callback handling",
+          "branchName": "feature/oauth-auth",
+          "commitHash": "a83f5e1",
+          "url": "https://github.com/example/agileflow/commit/a83f5e1",
+          "status": "Merged"
+        },
+        {
+          "taskKey": "dashboard-metrics",
+          "userKey": "lead",
+          "message": "Add dashboard aggregate polish",
+          "branchName": "feature/pitch-dashboard",
+          "commitHash": "c91b7a2",
+          "url": "https://github.com/example/agileflow/commit/c91b7a2",
+          "status": "Pending"
+        }
+      ],
+      "activityLogs": [
+        {
+          "taskKey": "github-oauth",
+          "userKey": "lead",
+          "fieldChanged": "Status",
+          "oldValue": "InProgress",
+          "newValue": "Done"
+        },
+        {
+          "taskKey": "kanban-polish",
+          "userKey": "admin",
+          "fieldChanged": "Priority",
+          "oldValue": "Medium",
+          "newValue": "High"
+        }
+      ]
+    },
+    {
+      "name": "Mobile Companion App",
+      "description": "Prototype mobile task notifications and lightweight approvals.",
+      "status": "OnHold",
+      "startDate": "2026-07-07T00:00:00Z",
+      "endDate": "2026-09-10T00:00:00Z",
+      "sprints": [
+        {
+          "key": "discovery",
+          "name": "Discovery Sprint",
+          "goal": "Validate mobile notification scope before committing full delivery.",
+          "status": "Planning",
+          "startDate": "2026-07-31T00:00:00Z",
+          "endDate": "2026-08-13T00:00:00Z"
+        }
+      ],
+      "tasks": [
+        {
+          "key": "mobile-notifications",
+          "sprintKey": "discovery",
+          "assigneeKey": "qa",
+          "column": "To Do",
+          "title": "Mobile approval push notification spike",
+          "description": "Explore whether task review notifications should reach mobile users in the first production release.",
+          "status": "Todo",
+          "priority": "Low",
+          "approvalStatus": null,
+          "dueDate": "2026-08-07T00:00:00Z"
+        }
+      ],
+      "comments": [],
+      "commits": [],
+      "activityLogs": []
+    }
+  ],
+  "notifications": [
+    {
+      "userKey": "admin",
+      "title": "Pitch workspace ready",
+      "message": "Demo projects, sprints, tasks, comments, commits, and notifications have been seeded.",
+      "type": "Info"
+    },
+    {
+      "userKey": "lead",
+      "title": "Review pending",
+      "message": "Executive dashboard pitch metrics is waiting for review.",
+      "type": "Warning"
+    },
+    {
+      "userKey": "developer",
+      "title": "Task assigned",
+      "message": "Kanban drag-and-drop polish has been assigned to you.",
+      "type": "Info"
+    }
+  ]
+}

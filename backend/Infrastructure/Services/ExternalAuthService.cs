@@ -5,6 +5,7 @@ using AgileFlow.Application.Interfaces;
 using AgileFlow.Application.Models;
 using AgileFlow.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace AgileFlow.Infrastructure.Services;
@@ -16,6 +17,7 @@ public sealed class ExternalAuthService(
     UserManager<AppUser> userManager,
     IOAuthProviderService oauthProviderService,
     IAuthService authService,
+    IConfiguration configuration,
     ILogger<ExternalAuthService> logger) : IExternalAuthService
 {
     public Task<AuthResponseDto> GoogleLoginAsync(OAuthLoginRequestDto request) =>
@@ -77,7 +79,7 @@ public sealed class ExternalAuthService(
         return await authService.CreateSessionForUserAsync(user);
     }
 
-    private static void ValidateRequest(OAuthLoginRequestDto request)
+    private void ValidateRequest(OAuthLoginRequestDto request)
     {
         if (string.IsNullOrWhiteSpace(request.Code))
             throw new ArgumentException("Authorization code is required.");
@@ -85,10 +87,26 @@ public sealed class ExternalAuthService(
         if (string.IsNullOrWhiteSpace(request.RedirectUri))
             throw new ArgumentException("Redirect URI is required.");
 
-        if (!Uri.TryCreate(request.RedirectUri, UriKind.Absolute, out var redirectUri)
-            || (redirectUri.Scheme != Uri.UriSchemeHttps && redirectUri.Scheme != Uri.UriSchemeHttp))
+        if (!Uri.TryCreate(request.RedirectUri, UriKind.Absolute, out var redirectUri))
         {
-            throw new ArgumentException("Redirect URI must be an absolute HTTP or HTTPS URL.");
+            throw new ArgumentException("Redirect URI must be an absolute URL.");
+        }
+
+        if (redirectUri.Scheme != Uri.UriSchemeHttps && !redirectUri.IsLoopback)
+        {
+            throw new ArgumentException("Redirect URI must use HTTPS outside local development.");
+        }
+
+        var allowedRedirectUris = configuration
+            .GetSection("OAuth:AllowedRedirectUris")
+            .GetChildren()
+            .Select(setting => setting.Value)
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value!);
+
+        if (!allowedRedirectUris.Contains(request.RedirectUri, StringComparer.Ordinal))
+        {
+            throw new ArgumentException("The OAuth redirect URI is not allowed.");
         }
     }
 

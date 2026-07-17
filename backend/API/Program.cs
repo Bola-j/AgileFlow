@@ -132,6 +132,7 @@ internal class Program
         builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
         builder.Services.AddScoped<INotificationEmailService, NotificationEmailService>();
         builder.Services.AddScoped<IEmailNotificationLogRepository, EmailNotificationLogRepository>();
+        builder.Services.AddScoped<PitchDataSeeder>();
         builder.Services.AddHostedService<DueDateReminderWorker>();
 
         // ── CORS (Vite dev server) ────────────────────────────────────────────────────
@@ -177,6 +178,9 @@ internal class Program
         logger.LogInformation("Applying database migrations.");
         dbContext.Database.Migrate();
         logger.LogInformation("Database is up to date.");
+
+        var pitchDataSeeder = scope.ServiceProvider.GetRequiredService<PitchDataSeeder>();
+        pitchDataSeeder.SeedAsync().GetAwaiter().GetResult();
     }
 
     private static void EnsureUploadDirectories(WebApplication app)

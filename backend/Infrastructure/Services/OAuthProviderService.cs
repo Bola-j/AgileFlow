@@ -106,15 +106,17 @@ public sealed class OAuthProviderService(
         var clientId = github["ClientId"] ?? throw new InvalidOperationException("GitHub:ClientId is not configured.");
         var clientSecret = github["ClientSecret"] ?? throw new InvalidOperationException("GitHub:ClientSecret is not configured.");
 
+        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["client_id"] = clientId,
+            ["client_secret"] = clientSecret,
+            ["code"] = code,
+            ["redirect_uri"] = redirectUri,
+        });
+
         var request = new HttpRequestMessage(HttpMethod.Post, "https://github.com/login/oauth/access_token")
         {
-            Content = JsonContent.Create(new
-            {
-                client_id = clientId,
-                client_secret = clientSecret,
-                code,
-                redirect_uri = redirectUri,
-            }),
+            Content = content,
         };
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         return request;

@@ -21,10 +21,10 @@
         "Email__Smtp__FromEmail": "no-reply@agileflow.local",
         "Email__Smtp__FromName": "AgileFlow",
         "Email__Smtp__FrontendBaseUrl": "http://127.0.0.1:5173",
-        "Google__ClientId": "",
-        "Google__ClientSecret": "",
-        "GitHub__ClientId": "",
-        "GitHub__ClientSecret": ""
+        "Seed__PitchData": "true",
+        "Seed__PitchDataPath": "SeedData/pitch-data.json",
+        "OAuth__AllowedRedirectUris__0": "http://127.0.0.1:5173/auth/callback/google",
+        "OAuth__AllowedRedirectUris__1": "http://127.0.0.1:5173/auth/callback/github"
       }
     },
     "https": {
@@ -47,10 +47,10 @@
         "Email__Smtp__FromEmail": "no-reply@agileflow.local",
         "Email__Smtp__FromName": "AgileFlow",
         "Email__Smtp__FrontendBaseUrl": "http://127.0.0.1:5173",
-        "Google__ClientId": "",
-        "Google__ClientSecret": "",
-        "GitHub__ClientId": "",
-        "GitHub__ClientSecret": ""
+        "Seed__PitchData": "true",
+        "Seed__PitchDataPath": "SeedData/pitch-data.json",
+        "OAuth__AllowedRedirectUris__0": "http://127.0.0.1:5173/auth/callback/google",
+        "OAuth__AllowedRedirectUris__1": "http://127.0.0.1:5173/auth/callback/github"
       }
     }
   }

@@ -99,12 +99,7 @@ public class TaskService : ITaskService
         var task = await _taskRepository.GetByIdAsync(id);
         if (task is null) return null;
 
-        var membership = await _authorizationService.EnsureMemberAsync(task.Sprint!.Project.WorkspaceId, userId);
-        var isManager = membership.Role is UserRole.Admin or UserRole.TeamLead;
-        var isAssignee = await _authorizationService.IsTaskAssigneeAsync(id, userId);
-
-        if (!isManager && !isAssignee)
-            throw new UnauthorizedAccessException("Only task assignees, admins, or team leads can update this task.");
+        await _authorizationService.EnsureTaskRoleAsync(id, userId, UserRole.Admin, UserRole.TeamLead);
 
         if (request.DueDate == default)
             throw new InvalidOperationException("DueDate is required.");

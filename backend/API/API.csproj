@@ -23,5 +23,8 @@
     <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
     <ProjectReference Include="..\Application\Application.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Update="SeedData\pitch-data.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,8 +22,14 @@ export function OAuthCallbackPage() {
   const [searchParams] = useSearchParams();
   const { loginWithOAuth } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const hasStarted = useRef(false);
 
   useEffect(() => {
+    // React StrictMode intentionally runs effects twice in development. The code can only
+    // be exchanged once, so prevent a second effect from consuming the saved OAuth state.
+    if (hasStarted.current) return;
+    hasStarted.current = true;
+
     if (!isOAuthProvider(providerParam)) {
       setError("Unsupported OAuth provider.");
       return;
@@ -46,34 +52,32 @@ export function OAuthCallbackPage() {
       return;
     }
 
+    const authorizationCode = code;
+
     const storedState = consumeOAuthState(provider, state);
     if (!storedState) {
       setError("Invalid OAuth state. Please try signing in again.");
       return;
     }
 
-    let cancelled = false;
+    const remember = storedState.remember;
 
     async function completeOAuth() {
       try {
         await loginWithOAuth(
           provider,
           {
-            code,
+            code: authorizationCode,
             redirectUri: oauthConfig.redirectUri(provider),
           },
-          storedState!.remember,
+          remember,
         );
       } catch (callbackError) {
-        if (!cancelled) setError(getErrorMessage(callbackError));
+        setError(getErrorMessage(callbackError));
       }
     }
 
     void completeOAuth();
-
-    return () => {
-      cancelled = true;
-    };
   }, [loginWithOAuth, providerParam, searchParams]);
 
   const providerName = isOAuthProvider(providerParam) ? providerLabels[providerParam] : "OAuth";
