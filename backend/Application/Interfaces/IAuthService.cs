@@ -1,4 +1,5 @@
 using AgileFlow.Application.DTOs.Auth;
+using AgileFlow.Domain.Entities;
 
 namespace AgileFlow.Application.Interfaces;
 
@@ -44,4 +45,10 @@ public interface IAuthService
     /// The API endpoint that calls this must be disabled outside Development.
     /// </summary>
     Task<ConfirmEmailResponseDto> ConfirmEmailForDevelopmentAsync(string email);
+
+    /// <summary>
+    /// Issues a JWT + refresh token pair for an already authenticated user.
+    /// Used by external OAuth login after Identity linking succeeds.
+    /// </summary>
+    Task<AuthResponseDto> CreateSessionForUserAsync(AppUser user);
 }

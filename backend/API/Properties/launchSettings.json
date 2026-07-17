@@ -20,7 +20,11 @@
         "Email__Smtp__Password": "",
         "Email__Smtp__FromEmail": "no-reply@agileflow.local",
         "Email__Smtp__FromName": "AgileFlow",
-        "Email__Smtp__FrontendBaseUrl": "http://127.0.0.1:5173"
+        "Email__Smtp__FrontendBaseUrl": "http://127.0.0.1:5173",
+        "Google__ClientId": "",
+        "Google__ClientSecret": "",
+        "GitHub__ClientId": "",
+        "GitHub__ClientSecret": ""
       }
     },
     "https": {
@@ -42,7 +46,11 @@
         "Email__Smtp__Password": "",
         "Email__Smtp__FromEmail": "no-reply@agileflow.local",
         "Email__Smtp__FromName": "AgileFlow",
-        "Email__Smtp__FrontendBaseUrl": "http://127.0.0.1:5173"
+        "Email__Smtp__FrontendBaseUrl": "http://127.0.0.1:5173",
+        "Google__ClientId": "",
+        "Google__ClientSecret": "",
+        "GitHub__ClientId": "",
+        "GitHub__ClientSecret": ""
       }
     }
   }

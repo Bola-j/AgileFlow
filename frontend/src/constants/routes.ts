@@ -3,6 +3,7 @@ export const routes = {
   login: "/login",
   register: "/register",
   verifyEmail: "/verify-email",
+  oauthCallback: (provider: "google" | "github") => `/auth/callback/${provider}`,
   workspaces: "/workspaces",
   workspace: (workspaceId: number | string) => `/workspaces/${workspaceId}`,
   project: (projectId: number | string) => `/projects/${projectId}`,

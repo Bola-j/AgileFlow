@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/forms";
 import { routes } from "@/constants/routes";
+import { OAuthButtons } from "@/features/auth/components/OAuthButtons";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { getErrorMessage } from "@/services/apiClient";
 
@@ -67,6 +68,7 @@ export function RegisterPage() {
                 <Field label="Password" error={form.formState.errors.password?.message}><Input type="password" {...form.register("password")} /></Field>
                 {error ? <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p> : null}
                 <Button type="submit" disabled={form.formState.isSubmitting}>{form.formState.isSubmitting ? "Creating..." : "Create account"}</Button>
+                <OAuthButtons />
               </form>
               <p className="mt-5 text-sm text-muted-foreground">
                 Already registered? <Link className="font-medium text-primary" to={routes.login}>Sign in</Link>

@@ -3,6 +3,7 @@ import { AppProviders } from "@/app/providers";
 import { routes } from "@/constants/routes";
 import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
+import { OAuthCallbackPage } from "@/features/auth/pages/OAuthCallbackPage";
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
 import { VerifyEmailPage } from "@/features/auth/pages/VerifyEmailPage";
 import { AppShell } from "@/layouts/AppShell";
@@ -23,6 +24,7 @@ export function App() {
         <Route path={routes.login} element={<LoginPage />} />
         <Route path={routes.register} element={<RegisterPage />} />
         <Route path={routes.verifyEmail} element={<VerifyEmailPage />} />
+        <Route path="/auth/callback/:provider" element={<OAuthCallbackPage />} />
         <Route element={<ProtectedRoute />}>
           <Route element={<AppShell />}>
             <Route index element={<DashboardPage />} />

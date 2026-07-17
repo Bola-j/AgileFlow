@@ -117,8 +117,10 @@ internal class Program
         builder.Services.AddScoped<IBoardRepository, BoardRepository>();
 
         // ── Application services ──────────────────────────────────────────────────────
+        builder.Services.AddHttpClient<IOAuthProviderService, OAuthProviderService>();
         builder.Services.AddScoped<ITokenService, TokenService>();
         builder.Services.AddScoped<IAuthService, AuthService>();
+        builder.Services.AddScoped<IExternalAuthService, ExternalAuthService>();
         builder.Services.AddScoped<IAccountService, AccountService>();
         builder.Services.AddScoped<IWorkspaceAuthorizationService, WorkspaceAuthorizationService>();
         builder.Services.AddScoped<IWorkspaceService, WorkspaceService>();
